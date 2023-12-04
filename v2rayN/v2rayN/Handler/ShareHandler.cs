@@ -383,7 +383,7 @@ namespace v2rayN.Handler
                 {
                     profileItem = ResolveStdVLESS(result);
                 }
-                else if (result.StartsWith(Global.hysteria2Protocol))
+                else if (result.StartsWith(Global.hysteria2Protocol) || result.StartsWith(Global.hysteria2Protocol2))
                 {
                     msg = ResUI.ConfigurationFormatIncorrect;
 
@@ -810,6 +810,7 @@ namespace v2rayN.Handler
 
             var query = HttpUtility.ParseQueryString(url.Query);
             ResolveStdTransport(query, ref item);
+            item.allowInsecure = (query["insecure"] ?? "") == "1" ? "true" : "false";
 
             return item;
         }
