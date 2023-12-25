@@ -6,7 +6,6 @@ namespace v2rayN.Handler
 {
     internal class CoreConfigSingbox
     {
-        private string SampleClient = Global.SingboxSampleClient;
         private Config _config;
 
         public CoreConfigSingbox(Config config)
@@ -28,7 +27,7 @@ namespace v2rayN.Handler
 
                 msg = ResUI.InitialConfiguration;
 
-                string result = Utils.GetEmbedText(SampleClient);
+                string result = Utils.GetEmbedText(Global.SingboxSampleClient);
                 if (Utils.IsNullOrEmpty(result))
                 {
                     msg = ResUI.FailedGetDefaultConfiguration;
@@ -42,17 +41,17 @@ namespace v2rayN.Handler
                     return -1;
                 }
 
-                log(singboxConfig);
+                GenLog(singboxConfig);
 
-                inbound(singboxConfig);
+                GenInbounds(singboxConfig);
 
-                outbound(node, singboxConfig);
+                GenOutbound(node, singboxConfig);
 
-                routing(singboxConfig);
+                GenRouting(singboxConfig);
 
-                dns(node, singboxConfig);
+                GenDns(node, singboxConfig);
 
-                statistic(singboxConfig);
+                GenStatistic(singboxConfig);
 
                 msg = string.Format(ResUI.SuccessfulConfiguration, "");
             }
@@ -65,7 +64,7 @@ namespace v2rayN.Handler
             return 0;
         }
 
-        private int log(SingboxConfig singboxConfig)
+        private int GenLog(SingboxConfig singboxConfig)
         {
             try
             {
@@ -103,7 +102,7 @@ namespace v2rayN.Handler
 
         #region inbound private
 
-        private int inbound(SingboxConfig singboxConfig)
+        private int GenInbounds(SingboxConfig singboxConfig)
         {
             try
             {
@@ -126,7 +125,7 @@ namespace v2rayN.Handler
 
                     if (_config.routingBasicItem.enableRoutingAdvanced)
                     {
-                        var routing = ConfigHandler.GetDefaultRouting(ref _config);
+                        var routing = ConfigHandler.GetDefaultRouting(_config);
                         if (!Utils.IsNullOrEmpty(routing.domainStrategy4Singbox))
                         {
                             inbound.domain_strategy = routing.domainStrategy4Singbox;
@@ -203,7 +202,7 @@ namespace v2rayN.Handler
 
         #region outbound private
 
-        private int outbound(ProfileItem node, SingboxConfig singboxConfig)
+        private int GenOutbound(ProfileItem node, SingboxConfig singboxConfig)
         {
             try
             {
@@ -222,11 +221,11 @@ namespace v2rayN.Handler
 
                 if (node.configType == EConfigType.VMess)
                 {
-                    outbound.type = Global.vmessProtocolLite;
+                    outbound.type = Global.ProtocolTypes[EConfigType.VMess];
 
                     outbound.uuid = node.id;
                     outbound.alter_id = node.alterId;
-                    if (Global.vmessSecuritys.Contains(node.security))
+                    if (Global.VmessSecuritys.Contains(node.security))
                     {
                         outbound.security = node.security;
                     }
@@ -235,20 +234,20 @@ namespace v2rayN.Handler
                         outbound.security = Global.DefaultSecurity;
                     }
 
-                    outboundMux(node, outbound);
+                    GenOutboundMux(node, outbound);
                 }
                 else if (node.configType == EConfigType.Shadowsocks)
                 {
-                    outbound.type = Global.ssProtocolLite;
+                    outbound.type = Global.ProtocolTypes[EConfigType.Shadowsocks];
 
                     outbound.method = LazyConfig.Instance.GetShadowsocksSecuritys(node).Contains(node.security) ? node.security : "none";
                     outbound.password = node.id;
 
-                    outboundMux(node, outbound);
+                    GenOutboundMux(node, outbound);
                 }
                 else if (node.configType == EConfigType.Socks)
                 {
-                    outbound.type = Global.socksProtocolLite;
+                    outbound.type = Global.ProtocolTypes[EConfigType.Socks];
 
                     outbound.version = "5";
                     if (!Utils.IsNullOrEmpty(node.security)
@@ -260,7 +259,7 @@ namespace v2rayN.Handler
                 }
                 else if (node.configType == EConfigType.VLESS)
                 {
-                    outbound.type = Global.vlessProtocolLite;
+                    outbound.type = Global.ProtocolTypes[EConfigType.VLESS];
 
                     outbound.uuid = node.id;
 
@@ -268,7 +267,7 @@ namespace v2rayN.Handler
 
                     if (Utils.IsNullOrEmpty(node.flow))
                     {
-                        outboundMux(node, outbound);
+                        GenOutboundMux(node, outbound);
                     }
                     else
                     {
@@ -277,27 +276,37 @@ namespace v2rayN.Handler
                 }
                 else if (node.configType == EConfigType.Trojan)
                 {
-                    outbound.type = Global.trojanProtocolLite;
+                    outbound.type = Global.ProtocolTypes[EConfigType.Trojan];
 
                     outbound.password = node.id;
 
-                    outboundMux(node, outbound);
+                    GenOutboundMux(node, outbound);
                 }
                 else if (node.configType == EConfigType.Hysteria2)
                 {
-                    outbound.type = Global.hysteria2ProtocolLite;
+                    outbound.type = Global.ProtocolTypes[EConfigType.Hysteria2];
 
                     outbound.password = node.id;
 
                     outbound.up_mbps = _config.hysteriaItem.up_mbps > 0 ? _config.hysteriaItem.up_mbps : null;
                     outbound.down_mbps = _config.hysteriaItem.down_mbps > 0 ? _config.hysteriaItem.down_mbps : null;
 
-                    outboundMux(node, outbound);
+                    GenOutboundMux(node, outbound);
+                }
+                else if (node.configType == EConfigType.Tuic)
+                {
+                    outbound.type = Global.ProtocolTypes[EConfigType.Tuic];
+
+                    outbound.uuid = node.id;
+                    outbound.password = node.security;
+                    outbound.congestion_control = node.headerType;
+
+                    GenOutboundMux(node, outbound);
                 }
 
-                outboundTls(node, outbound);
+                GenOutboundTls(node, outbound);
 
-                outboundTransport(node, outbound);
+                GenOutboundTransport(node, outbound);
             }
             catch (Exception ex)
             {
@@ -306,7 +315,7 @@ namespace v2rayN.Handler
             return 0;
         }
 
-        private int outboundMux(ProfileItem node, Outbound4Sbox outbound)
+        private int GenOutboundMux(ProfileItem node, Outbound4Sbox outbound)
         {
             try
             {
@@ -331,7 +340,7 @@ namespace v2rayN.Handler
             return 0;
         }
 
-        private int outboundTls(ProfileItem node, Outbound4Sbox outbound)
+        private int GenOutboundTls(ProfileItem node, Outbound4Sbox outbound)
         {
             try
             {
@@ -381,7 +390,7 @@ namespace v2rayN.Handler
             return 0;
         }
 
-        private int outboundTransport(ProfileItem node, Outbound4Sbox outbound)
+        private int GenOutboundTransport(ProfileItem node, Outbound4Sbox outbound)
         {
             try
             {
@@ -437,7 +446,7 @@ namespace v2rayN.Handler
 
         #region routing rule private
 
-        private int routing(SingboxConfig singboxConfig)
+        private int GenRouting(SingboxConfig singboxConfig)
         {
             try
             {
@@ -448,7 +457,7 @@ namespace v2rayN.Handler
                     var tunRules = Utils.FromJson<List<Rule4Sbox>>(Utils.GetEmbedText(Global.TunSingboxRulesFileName));
                     singboxConfig.route.rules.AddRange(tunRules);
 
-                    routingDirectExe(out List<string> lstDnsExe, out List<string> lstDirectExe);
+                    GenRoutingDirectExe(out List<string> lstDnsExe, out List<string> lstDirectExe);
                     singboxConfig.route.rules.Add(new()
                     {
                         port = new() { 53 },
@@ -465,7 +474,7 @@ namespace v2rayN.Handler
 
                 if (_config.routingBasicItem.enableRoutingAdvanced)
                 {
-                    var routing = ConfigHandler.GetDefaultRouting(ref _config);
+                    var routing = ConfigHandler.GetDefaultRouting(_config);
                     if (routing != null)
                     {
                         var rules = Utils.FromJson<List<RulesItem>>(routing.ruleSet);
@@ -473,20 +482,20 @@ namespace v2rayN.Handler
                         {
                             if (item.enabled)
                             {
-                                routingUserRule(item, singboxConfig.route.rules);
+                                GenRoutingUserRule(item, singboxConfig.route.rules);
                             }
                         }
                     }
                 }
                 else
                 {
-                    var lockedItem = ConfigHandler.GetLockedRoutingItem(ref _config);
+                    var lockedItem = ConfigHandler.GetLockedRoutingItem(_config);
                     if (lockedItem != null)
                     {
                         var rules = Utils.FromJson<List<RulesItem>>(lockedItem.ruleSet);
                         foreach (var item in rules!)
                         {
-                            routingUserRule(item, singboxConfig.route.rules);
+                            GenRoutingUserRule(item, singboxConfig.route.rules);
                         }
                     }
                 }
@@ -498,7 +507,7 @@ namespace v2rayN.Handler
             return 0;
         }
 
-        private void routingDirectExe(out List<string> lstDnsExe, out List<string> lstDirectExe)
+        private void GenRoutingDirectExe(out List<string> lstDnsExe, out List<string> lstDirectExe)
         {
             lstDnsExe = new();
             lstDirectExe = new();
@@ -524,7 +533,7 @@ namespace v2rayN.Handler
             }
         }
 
-        private int routingUserRule(RulesItem item, List<Rule4Sbox> rules)
+        private int GenRoutingUserRule(RulesItem item, List<Rule4Sbox> rules)
         {
             try
             {
@@ -565,7 +574,7 @@ namespace v2rayN.Handler
                 {
                     foreach (var it in item.domain)
                     {
-                        parseV2Domain(it, rule);
+                        ParseV2Domain(it, rule);
                     }
                     rules.Add(rule);
                     hasDomainIp = true;
@@ -575,7 +584,7 @@ namespace v2rayN.Handler
                 {
                     foreach (var it in item.ip)
                     {
-                        parseV2Address(it, rule2);
+                        ParseV2Address(it, rule2);
                     }
                     rules.Add(rule2);
                     hasDomainIp = true;
@@ -600,7 +609,7 @@ namespace v2rayN.Handler
             return 0;
         }
 
-        private void parseV2Domain(string domain, Rule4Sbox rule)
+        private void ParseV2Domain(string domain, Rule4Sbox rule)
         {
             if (domain.StartsWith("ext:") || domain.StartsWith("ext-domain:"))
             {
@@ -640,7 +649,7 @@ namespace v2rayN.Handler
             }
         }
 
-        private void parseV2Address(string address, Rule4Sbox rule)
+        private void ParseV2Address(string address, Rule4Sbox rule)
         {
             if (address.StartsWith("ext:") || address.StartsWith("ext-ip:"))
             {
@@ -666,7 +675,7 @@ namespace v2rayN.Handler
 
         #region dns private
 
-        private int dns(ProfileItem node, SingboxConfig singboxConfig)
+        private int GenDns(ProfileItem node, SingboxConfig singboxConfig)
         {
             try
             {
@@ -724,7 +733,7 @@ namespace v2rayN.Handler
 
         #endregion dns private
 
-        private int statistic(SingboxConfig singboxConfig)
+        private int GenStatistic(SingboxConfig singboxConfig)
         {
             if (_config.guiItem.enableStatistics)
             {
@@ -740,7 +749,7 @@ namespace v2rayN.Handler
                     //}
                     clash_api = new Clash_Api4Sbox()
                     {
-                        external_controller = $"{Global.Loopback}:{Global.statePort}",
+                        external_controller = $"{Global.Loopback}:{Global.StatePort}",
                         store_selected = true
                     }
                 };

@@ -180,7 +180,7 @@ namespace v2rayN.Handler
                         //_updateFunc(false, $"{hashCode}{ResUI.MsgNoValidSubscription}");
                         continue;
                     }
-                    if (!url.StartsWith(Global.httpsProtocol) && !url.StartsWith(Global.httpProtocol))
+                    if (!url.StartsWith(Global.HttpsProtocol) && !url.StartsWith(Global.HttpProtocol))
                     {
                         continue;
                     }
@@ -271,7 +271,7 @@ namespace v2rayN.Handler
                             _updateFunc(false, $"{hashCode}{result}");
                         }
 
-                        int ret = ConfigHandler.AddBatchServers(ref config, result, id, true);
+                        int ret = ConfigHandler.AddBatchServers(config, result, id, true);
                         if (ret <= 0)
                         {
                             Utils.SaveLog("FailedImportSubscription");
@@ -296,8 +296,8 @@ namespace v2rayN.Handler
                 await UpdateGeoFile("geosite", _config, update);
                 await UpdateGeoFile("geoip", _config, update);
 
-                await UpdateGeoFile4Singbox("geosite", _config, false, update);
-                await UpdateGeoFile4Singbox("geoip", _config, true, update);
+                //await UpdateGeoFile4Singbox("geosite", _config, false, update);
+                //await UpdateGeoFile4Singbox("geoip", _config, true, update);
             });
         }
 
@@ -553,7 +553,7 @@ namespace v2rayN.Handler
         {
             _config = config;
             _updateFunc = update;
-            var url = string.Format(Global.geoUrl, geoName);
+            var url = string.Format(Global.GeoUrl, geoName);
 
             DownloadHandle downloadHandle = new();
             downloadHandle.UpdateCompleted += (sender2, args) =>
@@ -600,7 +600,7 @@ namespace v2rayN.Handler
         {
             _config = config;
             _updateFunc = update;
-            var url = string.Format(Global.singboxGeoUrl, geoName);
+            var url = string.Format(Global.SingboxGeoUrl, geoName);
 
             DownloadHandle downloadHandle = new();
             downloadHandle.UpdateCompleted += async (sender2, args) =>

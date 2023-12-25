@@ -87,6 +87,10 @@
                                     x:Name="menuAddHysteria2Server"
                                     Height="{StaticResource MenuItemHeight}"
                                     Header="{x:Static resx:ResUI.menuAddHysteria2Server}" />
+                                <MenuItem
+                                    x:Name="menuAddTuicServer"
+                                    Height="{StaticResource MenuItemHeight}"
+                                    Header="{x:Static resx:ResUI.menuAddTuicServer}" />
                                 <Separator Margin="-40,5" />
                                 <MenuItem
                                     x:Name="menuAddServerViaClipboard"
@@ -212,11 +216,11 @@
                                     x:Name="menuCheckUpdateN"
                                     Height="{StaticResource MenuItemHeight}"
                                     Header="V2rayN" />
-                                <MenuItem
+                                <!--<MenuItem
                                     x:Name="menuCheckUpdateV2flyCore"
                                     Height="{StaticResource MenuItemHeight}"
                                     Header="V2fly v5 Core" />
-                                <!--<MenuItem
+                              <MenuItem
                                     x:Name="menuCheckUpdateSagerNetCore"
                                     Height="{StaticResource MenuItemHeight}"
                                     Header="SagerNet Core" />-->
