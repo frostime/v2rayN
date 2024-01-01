@@ -33,12 +33,14 @@ namespace v2rayN
         public const string ConfigDB = "guiNDB.db";
         public const string CoreConfigFileName = "config.json";
         public const string CorePreConfigFileName = "configPre.json";
+        public const string CoreSpeedtestConfigFileName = "configSpeedtest.json";
         public const string V2raySampleClient = "v2rayN.Sample.SampleClientConfig";
         public const string SingboxSampleClient = "v2rayN.Sample.SingboxSampleClientConfig";
         public const string V2raySampleHttprequestFileName = "v2rayN.Sample.SampleHttprequest";
         public const string V2raySampleHttpresponseFileName = "v2rayN.Sample.SampleHttpresponse";
         public const string V2raySampleInbound = "v2rayN.Sample.SampleInbound";
         public const string V2raySampleOutbound = "v2rayN.Sample.SampleOutbound";
+        public const string SingboxSampleOutbound = "v2rayN.Sample.SingboxSampleOutbound";
         public const string CustomRoutingFileName = "v2rayN.Sample.custom_routing_";
         public const string TunSingboxDNSFileName = "v2rayN.Sample.tun_singbox_dns";
         public const string TunSingboxInboundFileName = "v2rayN.Sample.tun_singbox_inbound";
