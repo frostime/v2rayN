@@ -48,12 +48,12 @@ namespace v2rayN.Handler
 
             VmessQRCode vmessQRCode = new()
             {
-                v = item.configVersion.ToString(),
+                v = item.configVersion,
                 ps = item.remarks.TrimEx(),
                 add = item.address,
-                port = item.port.ToString(),
+                port = item.port,
                 id = item.id,
-                aid = item.alterId.ToString(),
+                aid = item.alterId,
                 scy = item.security,
                 net = item.network,
                 type = item.headerType,
@@ -385,14 +385,12 @@ namespace v2rayN.Handler
         /// <returns></returns>
         public static ProfileItem? ImportFromClipboardConfig(string clipboardData, out string msg)
         {
-            msg = string.Empty;
-
+            msg = ResUI.ConfigurationFormatIncorrect;
             ProfileItem? profileItem;
 
             try
             {
-                //载入配置文件
-                string result = clipboardData.TrimEx();// Utils.GetClipboardData();
+                string result = clipboardData.TrimEx();
                 if (Utils.IsNullOrEmpty(result))
                 {
                     msg = ResUI.FailedReadConfiguration;
@@ -413,8 +411,6 @@ namespace v2rayN.Handler
                 }
                 else if (result.StartsWith(Global.ProtocolShares[EConfigType.Shadowsocks]))
                 {
-                    msg = ResUI.ConfigurationFormatIncorrect;
-
                     profileItem = ResolveSSLegacy(result) ?? ResolveSip002(result);
                     if (profileItem == null)
                     {
@@ -429,8 +425,6 @@ namespace v2rayN.Handler
                 }
                 else if (result.StartsWith(Global.ProtocolShares[EConfigType.Socks]))
                 {
-                    msg = ResUI.ConfigurationFormatIncorrect;
-
                     profileItem = ResolveSocksNew(result) ?? ResolveSocks(result);
                     if (profileItem == null)
                     {
@@ -445,8 +439,6 @@ namespace v2rayN.Handler
                 }
                 else if (result.StartsWith(Global.ProtocolShares[EConfigType.Trojan]))
                 {
-                    msg = ResUI.ConfigurationFormatIncorrect;
-
                     profileItem = ResolveTrojan(result);
                 }
                 else if (result.StartsWith(Global.ProtocolShares[EConfigType.VLESS]))
@@ -455,8 +447,6 @@ namespace v2rayN.Handler
                 }
                 else if (result.StartsWith(Global.ProtocolShares[EConfigType.Hysteria2]) || result.StartsWith(Global.Hysteria2ProtocolShare))
                 {
-                    msg = ResUI.ConfigurationFormatIncorrect;
-
                     profileItem = ResolveHysteria2(result);
                 }
                 else if (result.StartsWith(Global.ProtocolShares[EConfigType.Tuic]))

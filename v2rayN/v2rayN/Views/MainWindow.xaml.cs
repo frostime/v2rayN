@@ -79,6 +79,7 @@ namespace v2rayN.Views
                 this.Bind(ViewModel, vm => vm.SelectedSub, v => v.lstGroup.SelectedItem).DisposeWith(disposables);
                 this.Bind(ViewModel, vm => vm.ServerFilter, v => v.txtServerFilter.Text).DisposeWith(disposables);
                 this.BindCommand(ViewModel, vm => vm.AddSubCmd, v => v.btnAddSub).DisposeWith(disposables);
+                this.BindCommand(ViewModel, vm => vm.EditSubCmd, v => v.btnEditSub).DisposeWith(disposables);
 
                 //servers
                 this.BindCommand(ViewModel, vm => vm.AddVmessServerCmd, v => v.menuAddVmessServer).DisposeWith(disposables);
@@ -112,7 +113,6 @@ namespace v2rayN.Views
 
                 //servers ping
                 this.BindCommand(ViewModel, vm => vm.MixedTestServerCmd, v => v.menuMixedTestServer).DisposeWith(disposables);
-                this.BindCommand(ViewModel, vm => vm.PingServerCmd, v => v.menuPingServer).DisposeWith(disposables);
                 this.BindCommand(ViewModel, vm => vm.TcpingServerCmd, v => v.menuTcpingServer).DisposeWith(disposables);
                 this.BindCommand(ViewModel, vm => vm.RealPingServerCmd, v => v.menuRealPingServer).DisposeWith(disposables);
                 this.BindCommand(ViewModel, vm => vm.SpeedServerCmd, v => v.menuSpeedServer).DisposeWith(disposables);
@@ -329,10 +329,6 @@ namespace v2rayN.Views
                         ViewModel?.AddServerViaClipboard();
                         break;
 
-                    case Key.P:
-                        ViewModel?.ServerSpeedtest(ESpeedActionType.Ping);
-                        break;
-
                     case Key.O:
                         ViewModel?.ServerSpeedtest(ESpeedActionType.Tcping);
                         break;
@@ -342,7 +338,7 @@ namespace v2rayN.Views
                         break;
 
                     case Key.S:
-                        _ = ViewModel?.ScanScreenTaskAsync();
+                        ViewModel?.ScanScreenTaskAsync().ContinueWith(_ => { });
                         break;
 
                     case Key.T:

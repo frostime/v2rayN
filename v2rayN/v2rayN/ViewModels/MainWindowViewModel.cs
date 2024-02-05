@@ -112,7 +112,6 @@ namespace v2rayN.ViewModels
         //servers ping
         public ReactiveCommand<Unit, Unit> MixedTestServerCmd { get; }
 
-        public ReactiveCommand<Unit, Unit> PingServerCmd { get; }
         public ReactiveCommand<Unit, Unit> TcpingServerCmd { get; }
         public ReactiveCommand<Unit, Unit> RealPingServerCmd { get; }
         public ReactiveCommand<Unit, Unit> SpeedServerCmd { get; }
@@ -128,6 +127,7 @@ namespace v2rayN.ViewModels
         public ReactiveCommand<Unit, Unit> SubSettingCmd { get; }
 
         public ReactiveCommand<Unit, Unit> AddSubCmd { get; }
+        public ReactiveCommand<Unit, Unit> EditSubCmd { get; }
         public ReactiveCommand<Unit, Unit> SubUpdateCmd { get; }
         public ReactiveCommand<Unit, Unit> SubUpdateViaProxyCmd { get; }
         public ReactiveCommand<Unit, Unit> SubGroupUpdateCmd { get; }
@@ -258,8 +258,6 @@ namespace v2rayN.ViewModels
             Locator.CurrentMutable.RegisterLazySingleton(() => new NoticeHandler(snackbarMessageQueue), typeof(NoticeHandler));
             _noticeHandler = Locator.Current.GetService<NoticeHandler>();
             _config = LazyConfig.Instance.GetConfig();
-            //ThreadPool.RegisterWaitForSingleObject(App.ProgramStarted, OnProgramStarted, null, -1, false);
-            Init();
 
             SelectedProfile = new();
             SelectedSub = new();
@@ -272,9 +270,11 @@ namespace v2rayN.ViewModels
             }
             _subId = _config.subIndexId;
 
-            InitSubscriptionView();
-            RefreshRoutingsMenu();
-            RefreshServers();
+            Init();
+            BindingUI();
+            RestoreUI();
+
+            #region WhenAnyValue && ReactiveCommand
 
             var canEditRemove = this.WhenAnyValue(
                x => x.SelectedProfile,
@@ -314,10 +314,6 @@ namespace v2rayN.ViewModels
               x => x.EnableTun,
                y => y == true)
                   .Subscribe(c => DoEnableTun(c));
-
-            BindingUI();
-            RestoreUI();
-            AutoHideStartup();
 
             //servers
             AddVmessServerCmd = ReactiveCommand.Create(() =>
@@ -412,10 +408,6 @@ namespace v2rayN.ViewModels
             {
                 ServerSpeedtest(ESpeedActionType.Mixedtest);
             });
-            PingServerCmd = ReactiveCommand.Create(() =>
-            {
-                ServerSpeedtest(ESpeedActionType.Ping);
-            }, canEditRemove);
             TcpingServerCmd = ReactiveCommand.Create(() =>
             {
                 ServerSpeedtest(ESpeedActionType.Tcping);
@@ -453,7 +445,11 @@ namespace v2rayN.ViewModels
             });
             AddSubCmd = ReactiveCommand.Create(() =>
             {
-                AddSub();
+                EditSub(true);
+            });
+            EditSubCmd = ReactiveCommand.Create(() =>
+            {
+                EditSub(false);
             });
             SubUpdateCmd = ReactiveCommand.Create(() =>
             {
@@ -568,6 +564,10 @@ namespace v2rayN.ViewModels
                 SetListenerType(ESysProxyType.Pac);
             });
 
+            #endregion WhenAnyValue && ReactiveCommand
+
+            AutoHideStartup();
+
             Global.ShowInTaskbar = true;
         }
 
@@ -585,6 +585,10 @@ namespace v2rayN.ViewModels
 
             MainFormHandler.Instance.UpdateTask(_config, UpdateTaskHandler);
             MainFormHandler.Instance.RegisterGlobalHotkey(_config, OnHotkeyHandler, UpdateTaskHandler);
+
+            InitSubscriptionView();
+            RefreshRoutingsMenu();
+            RefreshServers();
 
             Reload();
             ChangeSystemProxyStatus(_config.sysProxyType, true);
@@ -1329,9 +1333,21 @@ namespace v2rayN.ViewModels
             }
         }
 
-        private void AddSub()
+        private void EditSub(bool blNew)
         {
-            SubItem item = new();
+            SubItem item;
+            if (blNew)
+            {
+                item = new();
+            }
+            else
+            {
+                item = LazyConfig.Instance.GetSubItem(_subId);
+                if (item is null)
+                {
+                    return;
+                }
+            }
             var ret = (new SubEditWindow(item)).ShowDialog();
             if (ret == true)
             {
@@ -1482,16 +1498,21 @@ namespace v2rayN.ViewModels
 
         public void Reload()
         {
-            _ = LoadV2ray();
+            BlReloadEnabled = false;
+
+            LoadV2ray().ContinueWith(task =>
+            {
+                TestServerAvailability();
+
+                Application.Current.Dispatcher.Invoke((Action)(() =>
+                {
+                    BlReloadEnabled = true;
+                }));
+            });
         }
 
         private async Task LoadV2ray()
         {
-            Application.Current.Dispatcher.Invoke((Action)(() =>
-            {
-                BlReloadEnabled = false;
-            }));
-
             await Task.Run(() =>
             {
                 _coreHandler.LoadCore();
@@ -1500,13 +1521,6 @@ namespace v2rayN.ViewModels
 
                 ChangeSystemProxyStatus(_config.sysProxyType, false);
             });
-
-            TestServerAvailability();
-
-            Application.Current.Dispatcher.Invoke((Action)(() =>
-            {
-                BlReloadEnabled = true;
-            }));
         }
 
         private void CloseV2ray()
@@ -1702,7 +1716,6 @@ namespace v2rayN.ViewModels
             }
             CurrentFontSize = _config.uiItem.currentFontSize;
             CurrentLanguage = _config.uiItem.currentLanguage;
-            //BlShowTrayTip = _config.uiItem.showTrayTip;
 
             this.WhenAnyValue(
                   x => x.ColorModeDark,
@@ -1850,7 +1863,7 @@ namespace v2rayN.ViewModels
             if (_config.uiItem.autoHideStartup)
             {
                 Observable.Range(1, 1)
-                 .Delay(TimeSpan.FromSeconds(0.5))
+                 .Delay(TimeSpan.FromSeconds(1))
                  .Subscribe(x =>
                  {
                      Application.Current.Dispatcher.Invoke(() =>

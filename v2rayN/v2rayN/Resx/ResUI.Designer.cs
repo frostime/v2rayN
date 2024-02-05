@@ -970,15 +970,6 @@ namespace v2rayN.Resx {
         }
         
         /// <summary>
-        ///   查找类似 Test servers ping (Ctrl+P) 的本地化字符串。
-        /// </summary>
-        public static string menuPingServer {
-            get {
-                return ResourceManager.GetString("menuPingServer", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   查找类似 Promotion 的本地化字符串。
         /// </summary>
         public static string menuPromotion {
@@ -2848,6 +2839,15 @@ namespace v2rayN.Resx {
         public static string TbSettingsSocksPortTip {
             get {
                 return ResourceManager.GetString("TbSettingsSocksPortTip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Speed Ping Test Url 的本地化字符串。
+        /// </summary>
+        public static string TbSettingsSpeedPingTestUrl {
+            get {
+                return ResourceManager.GetString("TbSettingsSpeedPingTestUrl", resourceCulture);
             }
         }
         
