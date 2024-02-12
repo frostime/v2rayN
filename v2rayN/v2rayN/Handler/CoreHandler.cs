@@ -180,6 +180,7 @@ namespace v2rayN.Handler
 
         private void CoreStart(ProfileItem node)
         {
+            ShowMsg(false, $"{Environment.OSVersion} - {(Environment.Is64BitOperatingSystem ? 64 : 32)}");
             ShowMsg(false, string.Format(ResUI.StartService, DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")));
 
             ECoreType coreType;
@@ -316,7 +317,7 @@ namespace v2rayN.Handler
                     throw new Exception(displayLog ? proc.StandardError.ReadToEnd() : "启动进程失败并退出 (Failed to start the process and exited)");
                 }
 
-                Global.ProcessJob.AddProcess(proc.Handle);
+                LazyConfig.Instance.AddProcess(proc.Handle);
                 return proc;
             }
             catch (Exception ex)
