@@ -1,7 +1,8 @@
-﻿using System.Diagnostics;
+﻿using ReactiveUI;
+using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
-using v2rayN.Mode;
+using v2rayN.Model;
 using v2rayN.Resx;
 
 namespace v2rayN.Handler
@@ -213,8 +214,24 @@ namespace v2rayN.Handler
 
             DownloadHandle downloadHandle = new();
 
+            var exitLoop = false;
+            MessageBus.Current.Listen<string>(Global.CommandStopSpeedTest)
+                .Subscribe(x =>
+                {
+                    if (!exitLoop)
+                    {
+                        UpdateFunc("", ResUI.SpeedtestingStop);
+                    }
+                    exitLoop = true;
+                });
+
             foreach (var it in _selecteds)
             {
+                if (exitLoop)
+                {
+                    UpdateFunc(it.indexId, "", ResUI.SpeedtestingSkip);
+                    continue;
+                }
                 if (!it.allowTest)
                 {
                     continue;
@@ -270,8 +287,25 @@ namespace v2rayN.Handler
 
             DownloadHandle downloadHandle = new();
 
+            var exitLoop = false;
+            MessageBus.Current.Listen<string>(Global.CommandStopSpeedTest)
+                .Subscribe(x =>
+                {
+                    if (!exitLoop)
+                    {
+                        UpdateFunc("", ResUI.SpeedtestingStop);
+                    }
+                    exitLoop = true;
+                });
+
             foreach (var it in _selecteds)
             {
+                if (exitLoop)
+                {
+                    UpdateFunc(it.indexId, "", ResUI.SpeedtestingSkip);
+                    continue;
+                }
+
                 if (!it.allowTest)
                 {
                     continue;
@@ -326,7 +360,7 @@ namespace v2rayN.Handler
         private async Task<string> GetRealPingTime(DownloadHandle downloadHandle, IWebProxy webProxy)
         {
             int responseTime = await downloadHandle.GetRealPingTime(_config.speedTestItem.speedPingTestUrl, webProxy, 10);
-            //string output = Utils.IsNullOrEmpty(status) ? FormatOut(responseTime, "ms") : status;
+            //string output = Utile.IsNullOrEmpty(status) ? FormatOut(responseTime, "ms") : status;
             return FormatOut(responseTime, Global.DelayUnit);
         }
 

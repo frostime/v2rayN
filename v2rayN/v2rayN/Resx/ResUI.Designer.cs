@@ -592,7 +592,7 @@ namespace v2rayN.Resx {
         }
         
         /// <summary>
-        ///   查找类似 Url(Optional) 的本地化字符串。
+        ///   查找类似 URL(Optional) 的本地化字符串。
         /// </summary>
         public static string LvUrl {
             get {
@@ -799,7 +799,7 @@ namespace v2rayN.Resx {
         }
         
         /// <summary>
-        ///   查找类似 GlobalHotkeySetting 的本地化字符串。
+        ///   查找类似 Global Hotkey Setting 的本地化字符串。
         /// </summary>
         public static string menuGlobalHotkeySetting {
             get {
@@ -817,7 +817,7 @@ namespace v2rayN.Resx {
         }
         
         /// <summary>
-        ///   查找类似 Import old config guiNConfig 的本地化字符串。
+        ///   查找类似 Import old config (guiNConfig) 的本地化字符串。
         /// </summary>
         public static string menuImportOldGuiConfig {
             get {
@@ -844,7 +844,7 @@ namespace v2rayN.Resx {
         }
         
         /// <summary>
-        ///   查找类似 Import Rules From Sub Url 的本地化字符串。
+        ///   查找类似 Import Rules From Subscription URL 的本地化字符串。
         /// </summary>
         public static string menuImportRulesFromUrl {
             get {
@@ -916,7 +916,7 @@ namespace v2rayN.Resx {
         }
         
         /// <summary>
-        ///   查找类似 Clear All 的本地化字符串。
+        ///   查找类似 Clear all 的本地化字符串。
         /// </summary>
         public static string menuMsgViewClear {
             get {
@@ -934,7 +934,7 @@ namespace v2rayN.Resx {
         }
         
         /// <summary>
-        ///   查找类似 Copy All 的本地化字符串。
+        ///   查找类似 Copy all 的本地化字符串。
         /// </summary>
         public static string menuMsgViewCopyAll {
             get {
@@ -952,7 +952,7 @@ namespace v2rayN.Resx {
         }
         
         /// <summary>
-        ///   查找类似 Select All (Ctrl+A) 的本地化字符串。
+        ///   查找类似 Select all (Ctrl+A) 的本地化字符串。
         /// </summary>
         public static string menuMsgViewSelectAll {
             get {
@@ -961,7 +961,7 @@ namespace v2rayN.Resx {
         }
         
         /// <summary>
-        ///   查找类似 OptionSetting 的本地化字符串。
+        ///   查找类似 Option Setting 的本地化字符串。
         /// </summary>
         public static string menuOptionSetting {
             get {
@@ -988,7 +988,7 @@ namespace v2rayN.Resx {
         }
         
         /// <summary>
-        ///   查找类似 Reboot as administrator 的本地化字符串。
+        ///   查找类似 Restart as Administrator 的本地化字符串。
         /// </summary>
         public static string menuRebootAsAdmin {
             get {
@@ -1114,7 +1114,7 @@ namespace v2rayN.Resx {
         }
         
         /// <summary>
-        ///   查找类似 RoutingSetting 的本地化字符串。
+        ///   查找类似 Routing Setting 的本地化字符串。
         /// </summary>
         public static string menuRoutingSetting {
             get {
@@ -1123,7 +1123,7 @@ namespace v2rayN.Resx {
         }
         
         /// <summary>
-        ///   查找类似 Rule Add 的本地化字符串。
+        ///   查找类似 Add Rule 的本地化字符串。
         /// </summary>
         public static string menuRuleAdd {
             get {
@@ -1150,7 +1150,7 @@ namespace v2rayN.Resx {
         }
         
         /// <summary>
-        ///   查找类似 Remove Rules (Delete) 的本地化字符串。
+        ///   查找类似 Remove Rule (Delete) 的本地化字符串。
         /// </summary>
         public static string menuRuleRemove {
             get {
@@ -1159,7 +1159,7 @@ namespace v2rayN.Resx {
         }
         
         /// <summary>
-        ///   查找类似 Select All (Ctrl+A) 的本地化字符串。
+        ///   查找类似 Select all (Ctrl+A) 的本地化字符串。
         /// </summary>
         public static string menuSelectAll {
             get {
@@ -1276,7 +1276,7 @@ namespace v2rayN.Resx {
         }
         
         /// <summary>
-        ///   查找类似 Subscription group Settings 的本地化字符串。
+        ///   查找类似 Subscription group settings 的本地化字符串。
         /// </summary>
         public static string menuSubSetting {
             get {
@@ -1339,7 +1339,7 @@ namespace v2rayN.Resx {
         }
         
         /// <summary>
-        ///   查找类似 Pac Mode 的本地化字符串。
+        ///   查找类似 PAC mode 的本地化字符串。
         /// </summary>
         public static string menuSystemProxyPac {
             get {
@@ -1447,7 +1447,7 @@ namespace v2rayN.Resx {
         }
         
         /// <summary>
-        ///   查找类似 Please fill in the Url 的本地化字符串。
+        ///   查找类似 Please fill in the URL 的本地化字符串。
         /// </summary>
         public static string MsgNeedUrl {
             get {
@@ -1591,7 +1591,7 @@ namespace v2rayN.Resx {
         }
         
         /// <summary>
-        ///   查找类似 Not Run As Admin 的本地化字符串。
+        ///   查找类似 Not run as Admin 的本地化字符串。
         /// </summary>
         public static string NotRunAsAdmin {
             get {
@@ -1726,7 +1726,7 @@ namespace v2rayN.Resx {
         }
         
         /// <summary>
-        ///   查找类似 Run As Admin 的本地化字符串。
+        ///   查找类似 Run as Admin 的本地化字符串。
         /// </summary>
         public static string RunAsAdmin {
             get {
@@ -1780,7 +1780,16 @@ namespace v2rayN.Resx {
         }
         
         /// <summary>
-        ///   查找类似 Waiting for testing...... 的本地化字符串。
+        ///   查找类似 Test terminating... 的本地化字符串。
+        /// </summary>
+        public static string SpeedtestingStop {
+            get {
+                return ResourceManager.GetString("SpeedtestingStop", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Waiting for testing (press ESC to terminate)... 的本地化字符串。
         /// </summary>
         public static string SpeedtestingWait {
             get {
@@ -1871,7 +1880,7 @@ namespace v2rayN.Resx {
         }
         
         /// <summary>
-        ///   查找类似 Alpn 的本地化字符串。
+        ///   查找类似 ALPN 的本地化字符串。
         /// </summary>
         public static string TbAlpn {
             get {
@@ -1880,7 +1889,7 @@ namespace v2rayN.Resx {
         }
         
         /// <summary>
-        ///   查找类似 AlterId 的本地化字符串。
+        ///   查找类似 AlterID 的本地化字符串。
         /// </summary>
         public static string TbAlterId {
             get {
@@ -2069,7 +2078,7 @@ namespace v2rayN.Resx {
         }
         
         /// <summary>
-        ///   查找类似 GlobalHotkey Settings 的本地化字符串。
+        ///   查找类似 Global Hotkey Settings 的本地化字符串。
         /// </summary>
         public static string TbGlobalHotkeySetting {
             get {
@@ -2078,7 +2087,7 @@ namespace v2rayN.Resx {
         }
         
         /// <summary>
-        ///   查找类似 Set directly by pressing the keyboard, Take effect after restart 的本地化字符串。
+        ///   查找类似 Set directly by pressing the keyboard, take effect after restart 的本地化字符串。
         /// </summary>
         public static string TbGlobalHotkeySettingTip {
             get {
@@ -2672,7 +2681,7 @@ namespace v2rayN.Resx {
         }
         
         /// <summary>
-        ///   查找类似 FontSize 的本地化字符串。
+        ///   查找类似 Font Size 的本地化字符串。
         /// </summary>
         public static string TbSettingsFontSize {
             get {
@@ -2681,7 +2690,7 @@ namespace v2rayN.Resx {
         }
         
         /// <summary>
-        ///   查找类似 Http Port 的本地化字符串。
+        ///   查找类似 HTTP Port 的本地化字符串。
         /// </summary>
         public static string TbSettingsHttpPort {
             get {
@@ -2717,7 +2726,7 @@ namespace v2rayN.Resx {
         }
         
         /// <summary>
-        ///   查找类似 Language(Restart) 的本地化字符串。
+        ///   查找类似 Language (Restart) 的本地化字符串。
         /// </summary>
         public static string TbSettingsLanguage {
             get {
@@ -2834,7 +2843,7 @@ namespace v2rayN.Resx {
         }
         
         /// <summary>
-        ///   查找类似 Socks Port 的本地化字符串。
+        ///   查找类似 SOCKS Port 的本地化字符串。
         /// </summary>
         public static string TbSettingsSocksPort {
             get {
@@ -2843,7 +2852,7 @@ namespace v2rayN.Resx {
         }
         
         /// <summary>
-        ///   查找类似 http port=socks port+1 的本地化字符串。
+        ///   查找类似 HTTP port=SOCKS port+1 的本地化字符串。
         /// </summary>
         public static string TbSettingsSocksPortTip {
             get {
@@ -2852,7 +2861,7 @@ namespace v2rayN.Resx {
         }
         
         /// <summary>
-        ///   查找类似 Speed Ping Test Url 的本地化字符串。
+        ///   查找类似 Speed Ping Test URL 的本地化字符串。
         /// </summary>
         public static string TbSettingsSpeedPingTestUrl {
             get {
@@ -2870,7 +2879,7 @@ namespace v2rayN.Resx {
         }
         
         /// <summary>
-        ///   查找类似 SpeedTest Url 的本地化字符串。
+        ///   查找类似 SpeedTest URL 的本地化字符串。
         /// </summary>
         public static string TbSettingsSpeedTestUrl {
             get {
@@ -2906,7 +2915,7 @@ namespace v2rayN.Resx {
         }
         
         /// <summary>
-        ///   查找类似 Subscription conversion Url 的本地化字符串。
+        ///   查找类似 Subscription conversion URL 的本地化字符串。
         /// </summary>
         public static string TbSettingsSubConvert {
             get {
@@ -3086,7 +3095,7 @@ namespace v2rayN.Resx {
         }
         
         /// <summary>
-        ///   查找类似 Pac Mode 的本地化字符串。
+        ///   查找类似 PAC mode 的本地化字符串。
         /// </summary>
         public static string TbSystemProxyPac {
             get {
@@ -3212,7 +3221,7 @@ namespace v2rayN.Resx {
         }
         
         /// <summary>
-        ///   查找类似 *QUIC key/Kcp seed 的本地化字符串。
+        ///   查找类似 *QUIC key/KCP seed 的本地化字符串。
         /// </summary>
         public static string TransportPathTip3 {
             get {
@@ -3230,7 +3239,7 @@ namespace v2rayN.Resx {
         }
         
         /// <summary>
-        ///   查找类似 *Kcp seed 的本地化字符串。
+        ///   查找类似 *kcp seed 的本地化字符串。
         /// </summary>
         public static string TransportPathTip5 {
             get {
