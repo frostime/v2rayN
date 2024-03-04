@@ -88,7 +88,7 @@ namespace v2rayN.Handler
                     default:
                         break;
                 }
-                if (_config.coreBasicItem.loglevel == "none")
+                if (_config.coreBasicItem.loglevel == Global.None)
                 {
                     singboxConfig.log.disabled = true;
                 }
@@ -235,7 +235,7 @@ namespace v2rayN.Handler
                 {
                     outbound.type = Global.ProtocolTypes[EConfigType.Shadowsocks];
 
-                    outbound.method = LazyConfig.Instance.GetShadowsocksSecurities(node).Contains(node.security) ? node.security : "none";
+                    outbound.method = LazyConfig.Instance.GetShadowsocksSecurities(node).Contains(node.security) ? node.security : Global.None;
                     outbound.password = node.id;
 
                     GenOutboundMux(node, outbound);
@@ -409,6 +409,24 @@ namespace v2rayN.Handler
                         transport.type = "http";
                         transport.host = Utile.IsNullOrEmpty(node.requestHost) ? null : Utile.String2List(node.requestHost);
                         transport.path = Utile.IsNullOrEmpty(node.path) ? null : node.path;
+                        break;
+
+                    case "tcp":   //http
+                        if (node.headerType == Global.TcpHeaderHttp)
+                        {
+                            if (node.configType == EConfigType.Shadowsocks)
+                            {
+                                outbound.plugin = "obfs-local";
+                                outbound.plugin_opts = $"obfs=http;obfs-host={node.requestHost};";
+                            }
+                            else
+                            {
+                                transport.type = "http";
+                                transport.host = Utile.IsNullOrEmpty(node.requestHost) ? null : Utile.String2List(node.requestHost);
+                                transport.path = Utile.IsNullOrEmpty(node.path) ? null : node.path;
+                            }
+                        }
+
                         break;
 
                     case "ws":
