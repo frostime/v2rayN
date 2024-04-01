@@ -1,6 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Reactive.Linq;
-using v2rayN.Model;
+using v2rayN.Models;
 
 namespace v2rayN.Handler
 {
@@ -44,7 +44,7 @@ namespace v2rayN.Handler
 
         private void IndexIdEnqueue(string indexId)
         {
-            if (!Utile.IsNullOrEmpty(indexId) && !_queIndexIds.Contains(indexId))
+            if (!Utils.IsNullOrEmpty(indexId) && !_queIndexIds.Contains(indexId))
             {
                 _queIndexIds.Enqueue(indexId);
             }

@@ -2,7 +2,7 @@
 using System.Reactive.Disposables;
 using System.Windows;
 using System.Windows.Input;
-using v2rayN.Model;
+using v2rayN.Models;
 using v2rayN.ViewModels;
 
 namespace v2rayN.Views
@@ -127,12 +127,12 @@ namespace v2rayN.Views
 
         private void linkdomainStrategy_Click(object sender, System.Windows.RoutedEventArgs e)
         {
-            Utile.ProcessStart("https://www.v2fly.org/config/routing.html");
+            Utils.ProcessStart("https://www.v2fly.org/config/routing.html");
         }
 
         private void linkdomainStrategy4Singbox_Click(object sender, RoutedEventArgs e)
         {
-            Utile.ProcessStart("https://sing-box.sagernet.org/zh/configuration/shared/listen/#domain_strategy");
+            Utils.ProcessStart("https://sing-box.sagernet.org/zh/configuration/shared/listen/#domain_strategy");
         }
 
         private void btnCancel_Click(object sender, System.Windows.RoutedEventArgs e)

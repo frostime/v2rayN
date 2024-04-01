@@ -3,7 +3,7 @@ using System.Reactive.Disposables;
 using System.Windows;
 using System.Windows.Controls;
 using v2rayN.Handler;
-using v2rayN.Model;
+using v2rayN.Models;
 using v2rayN.Resx;
 using v2rayN.ViewModels;
 
@@ -265,7 +265,7 @@ namespace v2rayN.Views
         private void btnGUID_Click(object sender, RoutedEventArgs e)
         {
             txtId.Text =
-            txtId5.Text = Utile.GetGUID();
+            txtId5.Text = Utils.GetGUID();
         }
 
         private void SetHeaderType()
@@ -273,7 +273,7 @@ namespace v2rayN.Views
             cmbHeaderType.Items.Clear();
 
             var network = cmbNetwork.SelectedItem.ToString();
-            if (Utile.IsNullOrEmpty(network))
+            if (Utils.IsNullOrEmpty(network))
             {
                 cmbHeaderType.Items.Add(Global.None);
                 return;
@@ -307,7 +307,7 @@ namespace v2rayN.Views
         private void SetTips()
         {
             var network = cmbNetwork.SelectedItem.ToString();
-            if (Utile.IsNullOrEmpty(network))
+            if (Utils.IsNullOrEmpty(network))
             {
                 network = Global.DefaultNetwork;
             }

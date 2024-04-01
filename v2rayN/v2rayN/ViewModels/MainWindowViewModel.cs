@@ -15,7 +15,7 @@ using System.Text;
 using System.Windows;
 using System.Windows.Media;
 using v2rayN.Handler;
-using v2rayN.Model;
+using v2rayN.Models;
 using v2rayN.Resx;
 using v2rayN.Views;
 
@@ -265,7 +265,7 @@ namespace v2rayN.ViewModels
             SelectedMoveToGroup = new();
             SelectedRouting = new();
             SelectedServer = new();
-            if (_config.tunModeItem.enableTun && Utile.IsAdministrator())
+            if (_config.tunModeItem.enableTun && Utils.IsAdministrator())
             {
                 EnableTun = true;
             }
@@ -597,7 +597,7 @@ namespace v2rayN.ViewModels
 
         private void OnProgramStarted(object state, bool timeout)
         {
-            Application.Current.Dispatcher.Invoke((Action)(() =>
+            Application.Current?.Dispatcher.Invoke((Action)(() =>
             {
                 ShowHideWindow(true);
             }));
@@ -638,15 +638,15 @@ namespace v2rayN.ViewModels
         {
             try
             {
-                Application.Current.Dispatcher.Invoke((Action)(() =>
+                Application.Current?.Dispatcher.Invoke((Action)(() =>
                 {
                     if (!_showInTaskbar)
                     {
                         return;
                     }
 
-                    SpeedProxyDisplay = string.Format(ResUI.SpeedDisplayText, Global.ProxyTag, Utile.HumanFy(update.proxyUp), Utile.HumanFy(update.proxyDown));
-                    SpeedDirectDisplay = string.Format(ResUI.SpeedDisplayText, Global.DirectTag, Utile.HumanFy(update.directUp), Utile.HumanFy(update.directDown));
+                    SpeedProxyDisplay = string.Format(ResUI.SpeedDisplayText, Global.ProxyTag, Utils.HumanFy(update.proxyUp), Utils.HumanFy(update.proxyDown));
+                    SpeedDirectDisplay = string.Format(ResUI.SpeedDisplayText, Global.DirectTag, Utils.HumanFy(update.directUp), Utils.HumanFy(update.directDown));
 
                     if (update.proxyUp + update.proxyDown > 0)
                     {
@@ -656,20 +656,20 @@ namespace v2rayN.ViewModels
                             var item = _profileItems.Where(it => it.indexId == update.indexId).FirstOrDefault();
                             if (item != null)
                             {
-                                item.todayDown = Utile.HumanFy(update.todayDown);
-                                item.todayUp = Utile.HumanFy(update.todayUp);
-                                item.totalDown = Utile.HumanFy(update.totalDown);
-                                item.totalUp = Utile.HumanFy(update.totalUp);
+                                item.todayDown = Utils.HumanFy(update.todayDown);
+                                item.todayUp = Utils.HumanFy(update.todayUp);
+                                item.totalDown = Utils.HumanFy(update.totalDown);
+                                item.totalUp = Utils.HumanFy(update.totalUp);
 
                                 if (SelectedProfile?.indexId == item.indexId)
                                 {
-                                    var temp = JsonUtile.DeepCopy(item);
+                                    var temp = JsonUtils.DeepCopy(item);
                                     _profileItems.Replace(item, temp);
                                     SelectedProfile = temp;
                                 }
                                 else
                                 {
-                                    _profileItems.Replace(item, JsonUtile.DeepCopy(item));
+                                    _profileItems.Replace(item, JsonUtils.DeepCopy(item));
                                 }
                             }
                         }
@@ -684,7 +684,7 @@ namespace v2rayN.ViewModels
 
         private void UpdateSpeedtestHandler(string indexId, string delay, string speed)
         {
-            Application.Current.Dispatcher.Invoke((Action)(() =>
+            Application.Current?.Dispatcher.Invoke((Action)(() =>
             {
                 SetTestResult(indexId, delay, speed);
             }));
@@ -692,7 +692,7 @@ namespace v2rayN.ViewModels
 
         private void SetTestResult(string indexId, string delay, string speed)
         {
-            if (Utile.IsNullOrEmpty(indexId))
+            if (Utils.IsNullOrEmpty(indexId))
             {
                 _noticeHandler?.SendMessage(delay, true);
                 _noticeHandler?.Enqueue(delay);
@@ -701,17 +701,17 @@ namespace v2rayN.ViewModels
             var item = _profileItems.Where(it => it.indexId == indexId).FirstOrDefault();
             if (item != null)
             {
-                if (!Utile.IsNullOrEmpty(delay))
+                if (!Utils.IsNullOrEmpty(delay))
                 {
                     int.TryParse(delay, out int temp);
                     item.delay = temp;
                     item.delayVal = $"{delay} {Global.DelayUnit}";
                 }
-                if (!Utile.IsNullOrEmpty(speed))
+                if (!Utils.IsNullOrEmpty(speed))
                 {
                     item.speedVal = $"{speed} {Global.SpeedUnit}";
                 }
-                _profileItems.Replace(item, JsonUtile.DeepCopy(item));
+                _profileItems.Replace(item, JsonUtils.DeepCopy(item));
             }
         }
 
@@ -747,7 +747,6 @@ namespace v2rayN.ViewModels
             {
                 Logging.SaveLog("MyAppExit Begin");
 
-                StorageUI();
                 ConfigHandler.SaveConfig(_config);
 
                 //HttpProxyHandle.CloseHttpAgent(config);
@@ -772,7 +771,6 @@ namespace v2rayN.ViewModels
             finally
             {
                 Application.Current.Shutdown();
-                Environment.Exit(0);
             }
         }
 
@@ -801,7 +799,7 @@ namespace v2rayN.ViewModels
                 return;
             }
             _serverFilter = ServerFilter;
-            if (Utile.IsNullOrEmpty(_serverFilter))
+            if (Utils.IsNullOrEmpty(_serverFilter))
             {
                 RefreshServers();
             }
@@ -841,14 +839,14 @@ namespace v2rayN.ViewModels
                             delay = t33 == null ? 0 : t33.delay,
                             delayVal = t33?.delay != 0 ? $"{t33?.delay} {Global.DelayUnit}" : string.Empty,
                             speedVal = t33?.speed != 0 ? $"{t33?.speed} {Global.SpeedUnit}" : string.Empty,
-                            todayDown = t22 == null ? "" : Utile.HumanFy(t22.todayDown),
-                            todayUp = t22 == null ? "" : Utile.HumanFy(t22.todayUp),
-                            totalDown = t22 == null ? "" : Utile.HumanFy(t22.totalDown),
-                            totalUp = t22 == null ? "" : Utile.HumanFy(t22.totalUp)
+                            todayDown = t22 == null ? "" : Utils.HumanFy(t22.todayDown),
+                            todayUp = t22 == null ? "" : Utils.HumanFy(t22.todayUp),
+                            totalDown = t22 == null ? "" : Utils.HumanFy(t22.totalDown),
+                            totalUp = t22 == null ? "" : Utils.HumanFy(t22.totalUp)
                         }).OrderBy(t => t.sort).ToList();
-            _lstProfile = JsonUtile.Deserialize<List<ProfileItem>>(JsonUtile.Serialize(lstModel));
+            _lstProfile = JsonUtils.Deserialize<List<ProfileItem>>(JsonUtils.Serialize(lstModel));
 
-            Application.Current.Dispatcher.Invoke((Action)(() =>
+            Application.Current?.Dispatcher.Invoke((Action)(() =>
             {
                 _profileItems.Clear();
                 _profileItems.AddRange(lstModel);
@@ -951,7 +949,7 @@ namespace v2rayN.ViewModels
             }
             else
             {
-                lstSelecteds = JsonUtile.Deserialize<List<ProfileItem>>(JsonUtile.Serialize(orderProfiles));
+                lstSelecteds = JsonUtils.Deserialize<List<ProfileItem>>(JsonUtils.Serialize(orderProfiles));
             }
 
             return 0;
@@ -971,7 +969,7 @@ namespace v2rayN.ViewModels
             }
             else
             {
-                if (Utile.IsNullOrEmpty(SelectedProfile?.indexId))
+                if (Utils.IsNullOrEmpty(SelectedProfile?.indexId))
                 {
                     return;
                 }
@@ -1004,7 +1002,7 @@ namespace v2rayN.ViewModels
 
         public void AddServerViaClipboard()
         {
-            var clipboardData = Utile.GetClipboardData();
+            var clipboardData = Utils.GetClipboardData();
             int ret = ConfigHandler.AddBatchServers(_config, clipboardData!, _subId, false);
             if (ret > 0)
             {
@@ -1018,15 +1016,15 @@ namespace v2rayN.ViewModels
         {
             ShowHideWindow(false);
 
-            var dpiXY = Utile.GetDpiXY(Application.Current.MainWindow);
+            var dpiXY = Utils.GetDpiXY(Application.Current.MainWindow);
             string result = await Task.Run(() =>
             {
-                return Utile.ScanScreen(dpiXY.Item1, dpiXY.Item2);
+                return Utils.ScanScreen(dpiXY.Item1, dpiXY.Item2);
             });
 
             ShowHideWindow(true);
 
-            if (Utile.IsNullOrEmpty(result))
+            if (Utils.IsNullOrEmpty(result))
             {
                 _noticeHandler?.Enqueue(ResUI.NoValidQRcodeFound);
             }
@@ -1088,7 +1086,7 @@ namespace v2rayN.ViewModels
 
         public void SetDefaultServer()
         {
-            if (Utile.IsNullOrEmpty(SelectedProfile?.indexId))
+            if (Utils.IsNullOrEmpty(SelectedProfile?.indexId))
             {
                 return;
             }
@@ -1097,7 +1095,7 @@ namespace v2rayN.ViewModels
 
         private void SetDefaultServer(string indexId)
         {
-            if (Utile.IsNullOrEmpty(indexId))
+            if (Utils.IsNullOrEmpty(indexId))
             {
                 return;
             }
@@ -1129,7 +1127,7 @@ namespace v2rayN.ViewModels
             {
                 return;
             }
-            if (Utile.IsNullOrEmpty(SelectedServer.ID))
+            if (Utils.IsNullOrEmpty(SelectedServer.ID))
             {
                 return;
             }
@@ -1145,7 +1143,7 @@ namespace v2rayN.ViewModels
                 return;
             }
             var url = ShareHandler.GetShareUrl(item);
-            if (Utile.IsNullOrEmpty(url))
+            if (Utils.IsNullOrEmpty(url))
             {
                 return;
             }
@@ -1161,7 +1159,7 @@ namespace v2rayN.ViewModels
 
         public void SortServer(string colName)
         {
-            if (Utile.IsNullOrEmpty(colName))
+            if (Utils.IsNullOrEmpty(colName))
             {
                 return;
             }
@@ -1186,7 +1184,7 @@ namespace v2rayN.ViewModels
             (new UpdateHandle()).RunAvailabilityCheck((bool success, string msg) =>
             {
                 _noticeHandler?.SendMessage(msg, true);
-                Application.Current.Dispatcher.Invoke((Action)(() =>
+                Application.Current?.Dispatcher.Invoke((Action)(() =>
                 {
                     if (!_showInTaskbar)
                     {
@@ -1286,7 +1284,7 @@ namespace v2rayN.ViewModels
             foreach (var it in lstSelecteds)
             {
                 string url = ShareHandler.GetShareUrl(it);
-                if (Utile.IsNullOrEmpty(url))
+                if (Utils.IsNullOrEmpty(url))
                 {
                     continue;
                 }
@@ -1295,7 +1293,7 @@ namespace v2rayN.ViewModels
             }
             if (sb.Length > 0)
             {
-                Utile.SetClipboardData(sb.ToString());
+                Utils.SetClipboardData(sb.ToString());
                 _noticeHandler?.SendMessage(ResUI.BatchExportURLSuccessfully);
             }
         }
@@ -1311,7 +1309,7 @@ namespace v2rayN.ViewModels
             foreach (var it in lstSelecteds)
             {
                 string? url = ShareHandler.GetShareUrl(it);
-                if (Utile.IsNullOrEmpty(url))
+                if (Utils.IsNullOrEmpty(url))
                 {
                     continue;
                 }
@@ -1320,7 +1318,7 @@ namespace v2rayN.ViewModels
             }
             if (sb.Length > 0)
             {
-                Utile.SetClipboardData(Utile.Base64Encode(sb.ToString()));
+                Utils.SetClipboardData(Utils.Base64Encode(sb.ToString()));
                 _noticeHandler?.SendMessage(ResUI.BatchExportSubscriptionSuccessfully);
             }
         }
@@ -1407,8 +1405,8 @@ namespace v2rayN.ViewModels
             {
                 UseShellExecute = true,
                 Arguments = Global.RebootAs,
-                WorkingDirectory = Utile.StartupPath(),
-                FileName = Utile.GetExePath().AppendQuotes(),
+                WorkingDirectory = Utils.StartupPath(),
+                FileName = Utils.GetExePath().AppendQuotes(),
                 Verb = "runas",
             };
             try
@@ -1426,7 +1424,7 @@ namespace v2rayN.ViewModels
             {
                 return;
             }
-            if (Utile.IsNullOrEmpty(fileName))
+            if (Utils.IsNullOrEmpty(fileName))
             {
                 return;
             }
@@ -1472,8 +1470,8 @@ namespace v2rayN.ViewModels
                 {
                     CloseCore();
 
-                    string fileName = Utile.GetTempPath(Utile.GetDownloadFileName(msg));
-                    string toPath = Utile.GetBinPath("", type.ToString());
+                    string fileName = Utils.GetTempPath(Utils.GetDownloadFileName(msg));
+                    string toPath = Utils.GetBinPath("", type.ToString());
 
                     FileManager.ZipExtractToFile(fileName, toPath, _config.guiItem.ignoreGeoUpdateCore ? "geo" : "");
 
@@ -1509,7 +1507,7 @@ namespace v2rayN.ViewModels
             {
                 TestServerAvailability();
 
-                Application.Current.Dispatcher.Invoke((Action)(() =>
+                Application.Current?.Dispatcher.Invoke((Action)(() =>
                 {
                     BlReloadEnabled = true;
                 }));
@@ -1559,7 +1557,7 @@ namespace v2rayN.ViewModels
             SysProxyHandle.UpdateSysProxy(_config, _config.tunModeItem.enableTun ? true : false);
             _noticeHandler?.SendMessage(ResUI.TipChangeSystemProxy + _config.sysProxyType.ToString(), true);
 
-            Application.Current.Dispatcher.Invoke((Action)(() =>
+            Application.Current?.Dispatcher.Invoke((Action)(() =>
             {
                 BlSystemProxyClear = (type == ESysProxyType.ForcedClear);
                 BlSystemProxySet = (type == ESysProxyType.ForcedChange);
@@ -1647,7 +1645,7 @@ namespace v2rayN.ViewModels
             {
                 _config.tunModeItem.enableTun = EnableTun;
                 // When running as a non-administrator, reboot to administrator mode
-                if (EnableTun && !Utile.IsAdministrator())
+                if (EnableTun && !Utils.IsAdministrator())
                 {
                     _config.tunModeItem.enableTun = false;
                     RebootAsAdmin();
@@ -1689,7 +1687,7 @@ namespace v2rayN.ViewModels
         {
             if (FollowSystemTheme)
             {
-                ModifyTheme(!Utile.IsLightTheme());
+                ModifyTheme(!Utils.IsLightTheme());
             }
             else
             {
@@ -1706,10 +1704,6 @@ namespace v2rayN.ViewModels
                     ChangePrimaryColor(swatch.ExemplarHue.Color);
                 }
             }
-        }
-
-        private void StorageUI()
-        {
         }
 
         private void BindingUI()
@@ -1747,7 +1741,7 @@ namespace v2rayN.ViewModels
                             ConfigHandler.SaveConfig(_config);
                             if (FollowSystemTheme)
                             {
-                                ModifyTheme(!Utile.IsLightTheme());
+                                ModifyTheme(!Utils.IsLightTheme());
                             }
                             else
                             {
@@ -1799,7 +1793,7 @@ namespace v2rayN.ViewModels
              y => y != null && !y.IsNullOrEmpty())
                 .Subscribe(c =>
                 {
-                    if (!Utile.IsNullOrEmpty(CurrentLanguage))
+                    if (!Utils.IsNullOrEmpty(CurrentLanguage))
                     {
                         _config.uiItem.currentLanguage = CurrentLanguage;
                         Thread.CurrentThread.CurrentUICulture = new(CurrentLanguage);
@@ -1851,7 +1845,7 @@ namespace v2rayN.ViewModels
             theme.SetBaseTheme(isDarkTheme ? Theme.Dark : Theme.Light);
             _paletteHelper.SetTheme(theme);
 
-            Utile.SetDarkBorder(Application.Current.MainWindow, isDarkTheme);
+            Utils.SetDarkBorder(Application.Current.MainWindow, isDarkTheme);
         }
 
         public void ChangePrimaryColor(System.Windows.Media.Color color)
@@ -1873,7 +1867,7 @@ namespace v2rayN.ViewModels
                  .Delay(TimeSpan.FromSeconds(1))
                  .Subscribe(x =>
                  {
-                     Application.Current.Dispatcher.Invoke(() =>
+                     Application.Current?.Dispatcher.Invoke(() =>
                      {
                          ShowHideWindow(false);
                      });

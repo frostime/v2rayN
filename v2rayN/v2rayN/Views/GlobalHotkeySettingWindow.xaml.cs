@@ -3,7 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using v2rayN.Handler;
-using v2rayN.Model;
+using v2rayN.Models;
 using v2rayN.Resx;
 
 namespace v2rayN.Views
@@ -39,7 +39,7 @@ namespace v2rayN.Views
 
             HotkeyHandler.Instance.IsPause = true;
             this.Closing += (s, e) => HotkeyHandler.Instance.IsPause = false;
-            Utile.SetDarkBorder(this, _config.uiItem.colorModeDark);
+            Utils.SetDarkBorder(this, _config.uiItem.colorModeDark);
             InitData();
         }
 
@@ -70,7 +70,7 @@ namespace v2rayN.Views
 
         private KeyEventItem GetKeyEventItemByEGlobalHotkey(List<KeyEventItem> KEList, EGlobalHotkey eg)
         {
-            return JsonUtile.DeepCopy(KEList.Find((it) => it.eGlobalHotkey == eg) ?? new()
+            return JsonUtils.DeepCopy(KEList.Find((it) => it.eGlobalHotkey == eg) ?? new()
             {
                 eGlobalHotkey = eg,
                 Control = false,

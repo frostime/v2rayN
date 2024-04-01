@@ -4,7 +4,7 @@ using Splat;
 using System.Reactive;
 using System.Windows;
 using v2rayN.Handler;
-using v2rayN.Model;
+using v2rayN.Models;
 using v2rayN.Resx;
 
 namespace v2rayN.ViewModels
@@ -32,7 +32,7 @@ namespace v2rayN.ViewModels
             }
             else
             {
-                SelectedSource = JsonUtile.DeepCopy(subItem);
+                SelectedSource = JsonUtils.DeepCopy(subItem);
             }
 
             SaveCmd = ReactiveCommand.Create(() =>
@@ -40,13 +40,13 @@ namespace v2rayN.ViewModels
                 SaveSub();
             });
 
-            Utile.SetDarkBorder(view, _config.uiItem.colorModeDark);
+            Utils.SetDarkBorder(view, _config.uiItem.colorModeDark);
         }
 
         private void SaveSub()
         {
             string remarks = SelectedSource.remarks;
-            if (Utile.IsNullOrEmpty(remarks))
+            if (Utils.IsNullOrEmpty(remarks))
             {
                 _noticeHandler?.Enqueue(ResUI.PleaseFillRemarks);
                 return;
