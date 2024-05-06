@@ -41,14 +41,14 @@
     [Serializable]
     public class Rule4Sbox
     {
-        public string outbound { get; set; }
-        public string server { get; set; }
+        public string? outbound { get; set; }
+        public string? server { get; set; }
         public bool? disable_cache { get; set; }
         public List<string>? inbound { get; set; }
         public List<string>? protocol { get; set; }
-        public string type { get; set; }
-        public string mode { get; set; }
-        public string network { get; set; }
+        public string? type { get; set; }
+        public string? mode { get; set; }
+        public string? network { get; set; }
         public bool? ip_is_private { get; set; }
         public List<int>? port { get; set; }
         public List<string>? port_range { get; set; }
@@ -238,7 +238,9 @@
         public string? tag { get; set; }
         public string? type { get; set; }
         public string? format { get; set; }
+        public string? path { get; set; }
         public string? url { get; set; }
         public string? download_detour { get; set; }
+        public string? update_interval { get; set; }  
     }
 }
