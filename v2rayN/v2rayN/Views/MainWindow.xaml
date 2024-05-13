@@ -15,6 +15,7 @@
     Title="v2rayN"
     Width="900"
     Height="700"
+    MinWidth="900"
     x:TypeArguments="vms:MainWindowViewModel"
     Background="{DynamicResource MaterialDesignPaper}"
     FontFamily="{x:Static conv:MaterialDesignFonts.MyFont}"
@@ -37,6 +38,7 @@
 
     <materialDesign:DialogHost
         Identifier="RootDialog"
+        materialDesign:TransitionAssist.DisableTransitions="True"
         SnackbarMessageQueue="{Binding ElementName=MainSnackbar, Path=MessageQueue}"
         Style="{StaticResource MaterialDesignEmbeddedDialogHost}">
         <Grid>
@@ -190,9 +192,13 @@
                                     Header="{x:Static resx:ResUI.menuClearServerStatistics}" />
                                 <Separator Margin="-40,5" />
                                 <MenuItem
+                                    x:Name="menuOpenTheFileLocation"
+                                    Height="{StaticResource MenuItemHeight}"
+                                    Header="{x:Static resx:ResUI.menuOpenTheFileLocation}" />
+                                <!--<MenuItem
                                     x:Name="menuImportOldGuiConfig"
                                     Height="{StaticResource MenuItemHeight}"
-                                    Header="{x:Static resx:ResUI.menuImportOldGuiConfig}" />
+                                    Header="{x:Static resx:ResUI.menuImportOldGuiConfig}" />-->
                             </MenuItem>
                         </Menu>
                         <Separator />
