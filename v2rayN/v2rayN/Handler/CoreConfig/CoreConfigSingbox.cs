@@ -26,7 +26,7 @@ namespace v2rayN.Handler.CoreConfig
                     msg = ResUI.CheckServerSettings;
                     return -1;
                 }
-                if (node.GetNetwork() == nameof(ETransport.kcp))
+                if (node.GetNetwork() is nameof(ETransport.kcp) or nameof(ETransport.splithttp))
                 {
                     msg = ResUI.Incorrectconfiguration + $" - {node.GetNetwork()}";
                     return -1;
@@ -552,7 +552,7 @@ namespace v2rayN.Handler.CoreConfig
                     singboxConfig.route.rules.Add(new()
                     {
                         port = [53],
-                        network = "udp",
+                        network = ["udp"],
                         outbound = dnsOutbound
                     });
                 }
@@ -667,6 +667,10 @@ namespace v2rayN.Handler.CoreConfig
                     {
                         rule.port = new List<int> { Utils.ToInt(item.port) };
                     }
+                }
+                if (!Utils.IsNullOrEmpty(item.network))
+                {
+                    rule.network = Utils.String2List(item.network);
                 }
                 if (item.protocol?.Count > 0)
                 {
@@ -841,13 +845,13 @@ namespace v2rayN.Handler.CoreConfig
             if (lstDomain != null && lstDomain.Count > 0)
             {
                 var tag = "local_local";
-                dns4Sbox.servers.Insert(0, new()
+                dns4Sbox.servers.Add(new()
                 {
                     tag = tag,
                     address = "223.5.5.5",
                     detour = Global.DirectTag,
                 });
-                dns4Sbox.rules.Insert(0, new()
+                dns4Sbox.rules.Add(new()
                 {
                     server = tag,
                     domain = lstDomain

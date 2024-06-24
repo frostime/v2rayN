@@ -157,7 +157,7 @@ namespace v2rayN
         public static readonly List<string> SsSecuritiesInXray = new() { "aes-256-gcm", "aes-128-gcm", "chacha20-poly1305", "chacha20-ietf-poly1305", "xchacha20-poly1305", "xchacha20-ietf-poly1305", "none", "plain", "2022-blake3-aes-128-gcm", "2022-blake3-aes-256-gcm", "2022-blake3-chacha20-poly1305" };
         public static readonly List<string> SsSecuritiesInSingbox = new() { "aes-256-gcm", "aes-192-gcm", "aes-128-gcm", "chacha20-ietf-poly1305", "xchacha20-ietf-poly1305", "none", "2022-blake3-aes-128-gcm", "2022-blake3-aes-256-gcm", "2022-blake3-chacha20-poly1305", "aes-128-ctr", "aes-192-ctr", "aes-256-ctr", "aes-128-cfb", "aes-192-cfb", "aes-256-cfb", "rc4-md5", "chacha20-ietf", "xchacha20" };
         public static readonly List<string> Flows = new() { "", "xtls-rprx-vision", "xtls-rprx-vision-udp443" };
-        public static readonly List<string> Networks = new() { "tcp", "kcp", "ws", "httpupgrade", "h2", "quic", "grpc" };
+        public static readonly List<string> Networks = new() { "tcp", "kcp", "ws", "httpupgrade", "splithttp", "h2", "quic", "grpc" };
         public static readonly List<string> KcpHeaderTypes = new() { "srtp", "utp", "wechat-video", "dtls", "wireguard" };
         public static readonly List<string> CoreTypes = new() { "v2fly", "SagerNet", "Xray", "sing_box" };
         public static readonly List<string> CoreTypes4VLESS = new() { "Xray", "sing_box" };
@@ -174,6 +174,7 @@ namespace v2rayN
         public static readonly List<string> LogLevels = new() { "debug", "info", "warning", "error", "none" };
         public static readonly List<string> InboundTags = new() { "socks", "http", "socks2", "http2" };
         public static readonly List<string> RuleProtocols = new() { "http", "tls", "bittorrent" };
+        public static readonly List<string> RuleNetworks = new() { "", "tcp", "udp", "tcp,udp" };
         public static readonly List<string> destOverrideProtocols = ["http", "tls", "quic", "fakedns", "fakedns+others"];
         public static readonly List<string> TunMtus = new() { "1280", "1408", "1500", "9000" };
         public static readonly List<string> TunStacks = new() { "gvisor", "system" };

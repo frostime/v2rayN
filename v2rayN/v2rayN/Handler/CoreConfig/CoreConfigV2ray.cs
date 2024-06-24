@@ -220,39 +220,43 @@ namespace v2rayN.Handler.CoreConfig
             return 0;
         }
 
-        private int GenRoutingUserRule(RulesItem4Ray? rules, V2rayConfig v2rayConfig)
+        private int GenRoutingUserRule(RulesItem4Ray? rule, V2rayConfig v2rayConfig)
         {
             try
             {
-                if (rules == null)
+                if (rule == null)
                 {
                     return 0;
                 }
-                if (Utils.IsNullOrEmpty(rules.port))
+                if (Utils.IsNullOrEmpty(rule.port))
                 {
-                    rules.port = null;
+                    rule.port = null;
                 }
-                if (rules.domain?.Count == 0)
+                if (Utils.IsNullOrEmpty(rule.network))
                 {
-                    rules.domain = null;
+                    rule.network = null;
                 }
-                if (rules.ip?.Count == 0)
+                if (rule.domain?.Count == 0)
                 {
-                    rules.ip = null;
+                    rule.domain = null;
                 }
-                if (rules.protocol?.Count == 0)
+                if (rule.ip?.Count == 0)
                 {
-                    rules.protocol = null;
+                    rule.ip = null;
                 }
-                if (rules.inboundTag?.Count == 0)
+                if (rule.protocol?.Count == 0)
                 {
-                    rules.inboundTag = null;
+                    rule.protocol = null;
+                }
+                if (rule.inboundTag?.Count == 0)
+                {
+                    rule.inboundTag = null;
                 }
 
                 var hasDomainIp = false;
-                if (rules.domain?.Count > 0)
+                if (rule.domain?.Count > 0)
                 {
-                    var it = JsonUtils.DeepCopy(rules);
+                    var it = JsonUtils.DeepCopy(rule);
                     it.ip = null;
                     it.type = "field";
                     for (int k = it.domain.Count - 1; k >= 0; k--)
@@ -266,9 +270,9 @@ namespace v2rayN.Handler.CoreConfig
                     v2rayConfig.routing.rules.Add(it);
                     hasDomainIp = true;
                 }
-                if (rules.ip?.Count > 0)
+                if (rule.ip?.Count > 0)
                 {
-                    var it = JsonUtils.DeepCopy(rules);
+                    var it = JsonUtils.DeepCopy(rule);
                     it.domain = null;
                     it.type = "field";
                     v2rayConfig.routing.rules.Add(it);
@@ -276,12 +280,12 @@ namespace v2rayN.Handler.CoreConfig
                 }
                 if (!hasDomainIp)
                 {
-                    if (!Utils.IsNullOrEmpty(rules.port)
-                        || rules.protocol?.Count > 0
-                        || rules.inboundTag?.Count > 0
+                    if (!Utils.IsNullOrEmpty(rule.port)
+                        || rule.protocol?.Count > 0
+                        || rule.inboundTag?.Count > 0
                         )
                     {
-                        var it = JsonUtils.DeepCopy(rules);
+                        var it = JsonUtils.DeepCopy(rule);
                         it.type = "field";
                         v2rayConfig.routing.rules.Add(it);
                     }
@@ -565,6 +569,7 @@ namespace v2rayN.Handler.CoreConfig
                         publicKey = node.publicKey,
                         shortId = node.shortId,
                         spiderX = node.spiderX,
+                        show = false,
                     };
 
                     streamSettings.realitySettings = realitySettings;
@@ -629,6 +634,25 @@ namespace v2rayN.Handler.CoreConfig
                             httpupgradeSettings.host = host;
                         }
                         streamSettings.httpupgradeSettings = httpupgradeSettings;
+
+                        break;
+                    //splithttp
+                    case nameof(ETransport.splithttp):
+                        SplithttpSettings4Ray splithttpSettings = new()
+                        {
+                            maxUploadSize = 1000000,
+                            maxConcurrentUploads = 10
+                        };
+
+                        if (!Utils.IsNullOrEmpty(node.path))
+                        {
+                            splithttpSettings.path = node.path;
+                        }
+                        if (!Utils.IsNullOrEmpty(host))
+                        {
+                            splithttpSettings.host = host;
+                        }
+                        streamSettings.splithttpSettings = splithttpSettings;
 
                         break;
                     //h2
