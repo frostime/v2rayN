@@ -79,15 +79,6 @@ namespace v2rayN.Resx {
         }
         
         /// <summary>
-        ///   查找类似 Batch export subscription to clipboard successfully 的本地化字符串。
-        /// </summary>
-        public static string BatchExportSubscriptionSuccessfully {
-            get {
-                return ResourceManager.GetString("BatchExportSubscriptionSuccessfully", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   查找类似 Batch export share URL to clipboard successfully 的本地化字符串。
         /// </summary>
         public static string BatchExportURLSuccessfully {
@@ -223,15 +214,6 @@ namespace v2rayN.Resx {
         }
         
         /// <summary>
-        ///   查找类似 Please fill in the KCP parameters correctly 的本地化字符串。
-        /// </summary>
-        public static string FillKcpParameters {
-            get {
-                return ResourceManager.GetString("FillKcpParameters", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   查找类似 Please fill in the local listening port 的本地化字符串。
         /// </summary>
         public static string FillLocalListeningPort {
@@ -286,29 +268,11 @@ namespace v2rayN.Resx {
         }
         
         /// <summary>
-        ///   查找类似 Is not the correct client configuration file, please check 的本地化字符串。
-        /// </summary>
-        public static string IncorrectClientConfiguration {
-            get {
-                return ResourceManager.GetString("IncorrectClientConfiguration", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   查找类似 Is not the correct configuration, please check 的本地化字符串。
         /// </summary>
         public static string Incorrectconfiguration {
             get {
                 return ResourceManager.GetString("Incorrectconfiguration", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 Is not the correct server configuration file, please check 的本地化字符串。
-        /// </summary>
-        public static string IncorrectServerConfiguration {
-            get {
-                return ResourceManager.GetString("IncorrectServerConfiguration", resourceCulture);
             }
         }
         
@@ -826,15 +790,6 @@ namespace v2rayN.Resx {
         }
         
         /// <summary>
-        ///   查找类似 Export subscription (base64) share to clipboard 的本地化字符串。
-        /// </summary>
-        public static string menuExport2SubContent {
-            get {
-                return ResourceManager.GetString("menuExport2SubContent", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   查找类似 Global Hotkey Setting 的本地化字符串。
         /// </summary>
         public static string menuGlobalHotkeySetting {
@@ -1011,15 +966,6 @@ namespace v2rayN.Resx {
         public static string menuMsgViewCopyAll {
             get {
                 return ResourceManager.GetString("menuMsgViewCopyAll", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 Set message filters 的本地化字符串。
-        /// </summary>
-        public static string menuMsgViewFilter {
-            get {
-                return ResourceManager.GetString("menuMsgViewFilter", resourceCulture);
             }
         }
         
@@ -1303,7 +1249,16 @@ namespace v2rayN.Resx {
         }
         
         /// <summary>
-        ///   查找类似 Multi-server set to active 的本地化字符串。
+        ///   查找类似 Multi-server load balancing 的本地化字符串。
+        /// </summary>
+        public static string menuSetDefaultLoadBalanceServer {
+            get {
+                return ResourceManager.GetString("menuSetDefaultLoadBalanceServer", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Multi-Server Preferred Latency 的本地化字符串。
         /// </summary>
         public static string menuSetDefaultMultipleServer {
             get {
@@ -1497,15 +1452,6 @@ namespace v2rayN.Resx {
         public static string menuTcpingServer {
             get {
                 return ResourceManager.GetString("menuTcpingServer", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 Test current service status 的本地化字符串。
-        /// </summary>
-        public static string menuTestMe {
-            get {
-                return ResourceManager.GetString("menuTestMe", resourceCulture);
             }
         }
         
@@ -1713,15 +1659,6 @@ namespace v2rayN.Resx {
         public static string NonvmessOrssProtocol {
             get {
                 return ResourceManager.GetString("NonvmessOrssProtocol", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 Non-standard service, this feature is invalid 的本地化字符串。
-        /// </summary>
-        public static string NonVmessService {
-            get {
-                return ResourceManager.GetString("NonVmessService", resourceCulture);
             }
         }
         
@@ -1993,15 +1930,6 @@ namespace v2rayN.Resx {
         public static string SuccessfullyImportedServerViaScan {
             get {
                 return ResourceManager.GetString("SuccessfullyImportedServerViaScan", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 System proxy 的本地化字符串。
-        /// </summary>
-        public static string SystemProxy {
-            get {
-                return ResourceManager.GetString("SystemProxy", resourceCulture);
             }
         }
         
@@ -2960,6 +2888,15 @@ namespace v2rayN.Resx {
         }
         
         /// <summary>
+        ///   查找类似 Main layout orientation(Require restart) 的本地化字符串。
+        /// </summary>
+        public static string TbSettingsMainGirdOrientation {
+            get {
+                return ResourceManager.GetString("TbSettingsMainGirdOrientation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 sing-box Mux Protocol 的本地化字符串。
         /// </summary>
         public static string TbSettingsMux4SboxProtocol {
@@ -3154,78 +3091,6 @@ namespace v2rayN.Resx {
         public static string TbSettingsTunMode {
             get {
                 return ResourceManager.GetString("TbSettingsTunMode", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 Bypass Mode 的本地化字符串。
-        /// </summary>
-        public static string TbSettingsTunModeBypassMode {
-            get {
-                return ResourceManager.GetString("TbSettingsTunModeBypassMode", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 Custom Template 的本地化字符串。
-        /// </summary>
-        public static string TbSettingsTunModeCustomTemplate {
-            get {
-                return ResourceManager.GetString("TbSettingsTunModeCustomTemplate", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 Direct IP CIDR, separated by commas (,) 的本地化字符串。
-        /// </summary>
-        public static string TbSettingsTunModeDirectIP {
-            get {
-                return ResourceManager.GetString("TbSettingsTunModeDirectIP", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 Direct Process name, separated by commas (,) 的本地化字符串。
-        /// </summary>
-        public static string TbSettingsTunModeDirectProcess {
-            get {
-                return ResourceManager.GetString("TbSettingsTunModeDirectProcess", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 DNS object, e.g. {&quot;servers&quot;:[]} 的本地化字符串。
-        /// </summary>
-        public static string TbSettingsTunModeDNS {
-            get {
-                return ResourceManager.GetString("TbSettingsTunModeDNS", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 Proxy IP CIDR, separated by commas (,) 的本地化字符串。
-        /// </summary>
-        public static string TbSettingsTunModeProxyIP {
-            get {
-                return ResourceManager.GetString("TbSettingsTunModeProxyIP", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 Proxy Process name, separated by commas (,) 的本地化字符串。
-        /// </summary>
-        public static string TbSettingsTunModeProxyProcess {
-            get {
-                return ResourceManager.GetString("TbSettingsTunModeProxyProcess", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 Show console 的本地化字符串。
-        /// </summary>
-        public static string TbSettingsTunModeShowWindow {
-            get {
-                return ResourceManager.GetString("TbSettingsTunModeShowWindow", resourceCulture);
             }
         }
         
@@ -3469,15 +3334,6 @@ namespace v2rayN.Resx {
         public static string TipPreSocksPort {
             get {
                 return ResourceManager.GetString("TipPreSocksPort", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 Too many servers, please open the main interface 的本地化字符串。
-        /// </summary>
-        public static string TooManyServersTip {
-            get {
-                return ResourceManager.GetString("TooManyServersTip", resourceCulture);
             }
         }
         

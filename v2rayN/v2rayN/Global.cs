@@ -74,6 +74,7 @@ namespace v2rayN
         public const string CommandClearMsg = "CommandClearMsg";
         public const string CommandSendMsgView = "CommandSendMsgView";
         public const string CommandStopSpeedTest = "CommandStopSpeedTest";
+        public const string CommandRefreshProfiles = "CommandRefreshProfiles";
         public const string DelayUnit = "";
         public const string SpeedUnit = "";
         public const int MinFontSize = 10;
@@ -115,6 +116,7 @@ namespace v2rayN
 
         public static readonly List<string> SpeedPingTestUrls = new() {
             @"https://www.google.com/generate_204",
+            @"https://www.gstatic.com/generate_204",
             @"https://www.apple.com/library/test/success.html",
             @"http://www.msftconnecttest.com/connecttest.txt",
         };
