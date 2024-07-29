@@ -80,6 +80,7 @@ namespace v2rayN.ViewModels
 
         #region System proxy
 
+        [Reactive] public bool notProxyLocalAddress { get; set; }
         [Reactive] public string systemProxyAdvancedProtocol { get; set; }
         [Reactive] public string systemProxyExceptions { get; set; }
 
@@ -178,8 +179,9 @@ namespace v2rayN.ViewModels
 
             #region System proxy
 
-            systemProxyAdvancedProtocol = _config.systemProxyAdvancedProtocol;
-            systemProxyExceptions = _config.systemProxyExceptions;
+            notProxyLocalAddress = _config.systemProxyItem.notProxyLocalAddress;
+            systemProxyAdvancedProtocol = _config.systemProxyItem.systemProxyAdvancedProtocol;
+            systemProxyExceptions = _config.systemProxyItem.systemProxyExceptions;
 
             #endregion System proxy
 
@@ -338,8 +340,9 @@ namespace v2rayN.ViewModels
             _config.uiItem.mainGirdOrientation = (EGirdOrientation)MainGirdOrientation;
 
             //systemProxy
-            _config.systemProxyExceptions = systemProxyExceptions;
-            _config.systemProxyAdvancedProtocol = systemProxyAdvancedProtocol;
+            _config.systemProxyItem.systemProxyExceptions = systemProxyExceptions;
+            _config.systemProxyItem.notProxyLocalAddress = notProxyLocalAddress;
+            _config.systemProxyItem.systemProxyAdvancedProtocol = systemProxyAdvancedProtocol;
 
             //tun mode
             _config.tunModeItem.strictRoute = TunStrictRoute;
