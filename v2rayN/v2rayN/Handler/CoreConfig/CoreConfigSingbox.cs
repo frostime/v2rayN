@@ -389,16 +389,25 @@ namespace v2rayN.Handler.CoreConfig
                     return -1;
                 }
 
-                var txtFile = File.ReadAllText(addressFileName);
-                var singboxConfig = JsonUtils.Deserialize<SingboxConfig>(txtFile);
-                if (singboxConfig == null)
+                if (node.address == Global.CoreMultipleLoadConfigFileName)
                 {
-                    msg = ResUI.FailedConversionConfiguration;
-                    return -1;
+                    var txtFile = File.ReadAllText(addressFileName);
+                    var singboxConfig = JsonUtils.Deserialize<SingboxConfig>(txtFile);
+                    if (singboxConfig == null)
+                    {
+                        File.Copy(addressFileName, fileName);
+                    }
+                    else
+                    {
+                        GenInbounds(singboxConfig);
+                        GenExperimental(singboxConfig);
+                        JsonUtils.ToFile(singboxConfig, fileName, false);
+                    }
                 }
-
-                GenExperimental(singboxConfig);
-                JsonUtils.ToFile(singboxConfig, fileName, false);
+                else
+                {
+                    File.Copy(addressFileName, fileName);
+                }
 
                 //check again
                 if (!File.Exists(fileName))
