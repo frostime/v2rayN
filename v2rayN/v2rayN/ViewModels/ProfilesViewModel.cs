@@ -1,33 +1,29 @@
 using DynamicData;
 using DynamicData.Binding;
-using MaterialDesignThemes.Wpf;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 using Splat;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Text;
-using System.Windows;
+using v2rayN.Base;
 using v2rayN.Enums;
 using v2rayN.Handler;
 using v2rayN.Handler.Fmt;
 using v2rayN.Handler.Statistics;
 using v2rayN.Models;
 using v2rayN.Resx;
-using v2rayN.Views;
 
 namespace v2rayN.ViewModels
 {
-    public class ProfilesViewModel : ReactiveObject
+    public class ProfilesViewModel : MyReactiveObject
     {
         #region private prop
 
         private List<ProfileItem> _lstProfile;
         private string _serverFilter = string.Empty;
-        private static Config _config;
-        private NoticeHandler? _noticeHandler;
+
         private Dictionary<string, bool> _dicHeaderSort = new();
-        private Action<EViewAction> _updateView;
 
         #endregion private prop
 
@@ -103,13 +99,13 @@ namespace v2rayN.ViewModels
 
         #region Init
 
-        public ProfilesViewModel(Action<EViewAction> updateView)
+        public ProfilesViewModel(Func<EViewAction, object?, bool>? updateView)
         {
+            _config = LazyConfig.Instance.GetConfig();
+            _noticeHandler = Locator.Current.GetService<NoticeHandler>();
             _updateView = updateView;
 
-            _noticeHandler = Locator.Current.GetService<NoticeHandler>();
-            _config = LazyConfig.Instance.GetConfig();
-            MessageBus.Current.Listen<string>(Global.CommandRefreshProfiles).Subscribe(x => RefreshServersBiz());
+            MessageBus.Current.Listen<string>(Global.CommandRefreshProfiles).Subscribe(x => _updateView?.Invoke(EViewAction.DispatcherRefreshServersBiz, null));
 
             SelectedProfile = new();
             SelectedSub = new();
@@ -249,34 +245,31 @@ namespace v2rayN.ViewModels
             Locator.Current.GetService<MainWindowViewModel>()?.Reload();
         }
 
-        private void UpdateSpeedtestHandler(string indexId, string delay, string speed)
+        private void UpdateSpeedtestHandler(SpeedTestResult result)
         {
-            Application.Current?.Dispatcher.Invoke((Action)(() =>
-            {
-                SetTestResult(indexId, delay, speed);
-            }));
+            _updateView?.Invoke(EViewAction.DispatcherSpeedTest, result);
         }
 
-        private void SetTestResult(string indexId, string delay, string speed)
+        public void SetSpeedTestResult(SpeedTestResult result)
         {
-            if (Utils.IsNullOrEmpty(indexId))
+            if (Utils.IsNullOrEmpty(result.IndexId))
             {
-                _noticeHandler?.SendMessage(delay, true);
-                _noticeHandler?.Enqueue(delay);
+                _noticeHandler?.SendMessage(result.Delay, true);
+                _noticeHandler?.Enqueue(result.Delay);
                 return;
             }
-            var item = _profileItems.Where(it => it.indexId == indexId).FirstOrDefault();
+            var item = _profileItems.Where(it => it.indexId == result.IndexId).FirstOrDefault();
             if (item != null)
             {
-                if (!Utils.IsNullOrEmpty(delay))
+                if (!Utils.IsNullOrEmpty(result.Delay))
                 {
-                    int.TryParse(delay, out int temp);
+                    int.TryParse(result.Delay, out int temp);
                     item.delay = temp;
-                    item.delayVal = $"{delay} {Global.DelayUnit}";
+                    item.delayVal = $"{result.Delay} {Global.DelayUnit}";
                 }
-                if (!Utils.IsNullOrEmpty(speed))
+                if (!Utils.IsNullOrEmpty(result.Speed))
                 {
-                    item.speedVal = $"{speed} {Global.SpeedUnit}";
+                    item.speedVal = $"{result.Speed} {Global.SpeedUnit}";
                 }
                 _profileItems.Replace(item, JsonUtils.DeepCopy(item));
             }
@@ -286,28 +279,25 @@ namespace v2rayN.ViewModels
         {
             try
             {
-                Application.Current?.Dispatcher.Invoke((Action)(() =>
+                var item = _profileItems.Where(it => it.indexId == update.indexId).FirstOrDefault();
+                if (item != null)
                 {
-                    var item = _profileItems.Where(it => it.indexId == update.indexId).FirstOrDefault();
-                    if (item != null)
-                    {
-                        item.todayDown = Utils.HumanFy(update.todayDown);
-                        item.todayUp = Utils.HumanFy(update.todayUp);
-                        item.totalDown = Utils.HumanFy(update.totalDown);
-                        item.totalUp = Utils.HumanFy(update.totalUp);
+                    item.todayDown = Utils.HumanFy(update.todayDown);
+                    item.todayUp = Utils.HumanFy(update.todayUp);
+                    item.totalDown = Utils.HumanFy(update.totalDown);
+                    item.totalUp = Utils.HumanFy(update.totalUp);
 
-                        if (SelectedProfile?.indexId == item.indexId)
-                        {
-                            var temp = JsonUtils.DeepCopy(item);
-                            _profileItems.Replace(item, temp);
-                            SelectedProfile = temp;
-                        }
-                        else
-                        {
-                            _profileItems.Replace(item, JsonUtils.DeepCopy(item));
-                        }
+                    if (SelectedProfile?.indexId == item.indexId)
+                    {
+                        var temp = JsonUtils.DeepCopy(item);
+                        _profileItems.Replace(item, temp);
+                        SelectedProfile = temp;
                     }
-                }));
+                    else
+                    {
+                        _profileItems.Replace(item, JsonUtils.DeepCopy(item));
+                    }
+                }
             }
             catch
             {
@@ -328,7 +318,7 @@ namespace v2rayN.ViewModels
 
             RefreshServers();
 
-            _updateView(EViewAction.ProfilesFocus);
+            _updateView?.Invoke(EViewAction.ProfilesFocus, null);
         }
 
         private void ServerFilterChanged(bool c)
@@ -349,7 +339,7 @@ namespace v2rayN.ViewModels
             MessageBus.Current.SendMessage("", Global.CommandRefreshProfiles);
         }
 
-        private void RefreshServersBiz()
+        public void RefreshServersBiz()
         {
             var lstModel = LazyConfig.Instance.ProfileItems(_config.subIndexId, _serverFilter);
 
@@ -384,25 +374,22 @@ namespace v2rayN.ViewModels
                             totalDown = t22 == null ? "" : Utils.HumanFy(t22.totalDown),
                             totalUp = t22 == null ? "" : Utils.HumanFy(t22.totalUp)
                         }).OrderBy(t => t.sort).ToList();
-            _lstProfile = JsonUtils.Deserialize<List<ProfileItem>>(JsonUtils.Serialize(lstModel));
+            _lstProfile = JsonUtils.Deserialize<List<ProfileItem>>(JsonUtils.Serialize(lstModel)) ?? [];
 
-            Application.Current?.Dispatcher.Invoke((Action)(() =>
+            _profileItems.Clear();
+            _profileItems.AddRange(lstModel);
+            if (lstModel.Count > 0)
             {
-                _profileItems.Clear();
-                _profileItems.AddRange(lstModel);
-                if (lstModel.Count > 0)
+                var selected = lstModel.FirstOrDefault(t => t.indexId == _config.indexId);
+                if (selected != null)
                 {
-                    var selected = lstModel.FirstOrDefault(t => t.indexId == _config.indexId);
-                    if (selected != null)
-                    {
-                        SelectedProfile = selected;
-                    }
-                    else
-                    {
-                        SelectedProfile = lstModel[0];
-                    }
+                    SelectedProfile = selected;
                 }
-            }));
+                else
+                {
+                    SelectedProfile = lstModel[0];
+                }
+            }
         }
 
         public void RefreshSubscriptions()
@@ -485,11 +472,11 @@ namespace v2rayN.ViewModels
             bool? ret = false;
             if (eConfigType == EConfigType.Custom)
             {
-                ret = (new AddServer2Window(item)).ShowDialog();
+                ret = _updateView?.Invoke(EViewAction.AddServer2Window, item);
             }
             else
             {
-                ret = (new AddServerWindow(item)).ShowDialog();
+                ret = _updateView?.Invoke(EViewAction.AddServerWindow, item);
             }
             if (ret == true)
             {
@@ -507,8 +494,7 @@ namespace v2rayN.ViewModels
             {
                 return;
             }
-
-            if (UI.ShowYesNo(ResUI.RemoveServer) == MessageBoxResult.No)
+            if (_updateView?.Invoke(EViewAction.ShowYesNo, null) == false)
             {
                 return;
             }
@@ -595,7 +581,7 @@ namespace v2rayN.ViewModels
             SetDefaultServer(SelectedServer.ID);
         }
 
-        public async void ShareServer()
+        public void ShareServer()
         {
             var item = LazyConfig.Instance.GetProfileItem(SelectedProfile.indexId);
             if (item is null)
@@ -608,14 +594,8 @@ namespace v2rayN.ViewModels
             {
                 return;
             }
-            var img = QRCodeHelper.GetQRCode(url);
-            var dialog = new QrcodeView()
-            {
-                imgQrcode = { Source = img },
-                txtContent = { Text = url },
-            };
 
-            await DialogHost.Show(dialog, "RootDialog");
+            _updateView?.Invoke(EViewAction.ShareServer, url);
         }
 
         private void SetDefaultMultipleServer(ECoreType coreType)
@@ -759,7 +739,7 @@ namespace v2rayN.ViewModels
             }
             if (sb.Length > 0)
             {
-                Utils.SetClipboardData(sb.ToString());
+                WindowsUtils.SetClipboardData(sb.ToString());
                 _noticeHandler?.SendMessage(ResUI.BatchExportURLSuccessfully);
             }
         }
@@ -783,8 +763,7 @@ namespace v2rayN.ViewModels
                     return;
                 }
             }
-            var ret = (new SubEditWindow(item)).ShowDialog();
-            if (ret == true)
+            if (_updateView?.Invoke(EViewAction.SubEditWindow, item) == true)
             {
                 RefreshSubscriptions();
                 SubSelectedChanged(true);

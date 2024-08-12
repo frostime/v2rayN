@@ -1,3 +1,4 @@
+using MaterialDesignThemes.Wpf;
 using ReactiveUI;
 using Splat;
 using System.Reactive.Disposables;
@@ -6,10 +7,12 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Threading;
 using v2rayN.Base;
 using v2rayN.Enums;
 using v2rayN.Handler;
 using v2rayN.Models;
+using v2rayN.Resx;
 using v2rayN.ViewModels;
 using Point = System.Windows.Point;
 
@@ -87,6 +90,7 @@ namespace v2rayN.Views
             });
 
             RestoreUI();
+            ViewModel?.RefreshServers();
         }
 
         #region Event
@@ -96,19 +100,67 @@ namespace v2rayN.Views
             StorageUI();
         }
 
-        private void UpdateViewHandler(EViewAction action)
+        private bool UpdateViewHandler(EViewAction action, object? obj)
         {
-            if (action == EViewAction.AdjustMainLvColWidth)
+            switch (action)
             {
-                Application.Current.Dispatcher.Invoke(() =>
-                {
-                    AutofitColumnWidth();
-                });
+                case EViewAction.ProfilesFocus:
+                    lstProfiles.Focus();
+                    break;
+
+                case EViewAction.ShowYesNo:
+                    if (UI.ShowYesNo(ResUI.RemoveServer) == MessageBoxResult.No)
+                    {
+                        return false;
+                    }
+                    break;
+
+                case EViewAction.AddServerWindow:
+                    if (obj is null) return false;
+                    return (new AddServerWindow((ProfileItem)obj)).ShowDialog() ?? false;
+
+                case EViewAction.AddServer2Window:
+                    if (obj is null) return false;
+                    return (new AddServer2Window((ProfileItem)obj)).ShowDialog() ?? false;
+
+                case EViewAction.ShareServer:
+                    if (obj is null) return false;
+                    ShareServer((string)obj);
+                    break;
+
+                case EViewAction.SubEditWindow:
+                    if (obj is null) return false;
+                    return (new SubEditWindow((SubItem)obj)).ShowDialog() ?? false;
+
+                case EViewAction.DispatcherSpeedTest:
+                    if (obj is null) return false;
+                    Application.Current?.Dispatcher.Invoke((() =>
+                    {
+                        ViewModel?.SetSpeedTestResult((SpeedTestResult)obj);
+                    }), DispatcherPriority.Normal);
+                    break;
+
+                case EViewAction.DispatcherRefreshServersBiz:
+                    Application.Current?.Dispatcher.Invoke((() =>
+                    {
+                        ViewModel?.RefreshServersBiz();
+                    }), DispatcherPriority.Normal);
+                    break;
             }
-            else if (action == EViewAction.ProfilesFocus)
+
+            return true;
+        }
+
+        public async void ShareServer(string url)
+        {
+            var img = QRCodeHelper.GetQRCode(url);
+            var dialog = new QrcodeView()
             {
-                lstProfiles.Focus();
-            }
+                imgQrcode = { Source = img },
+                txtContent = { Text = url },
+            };
+
+            await DialogHost.Show(dialog, "RootDialog");
         }
 
         private void lstProfiles_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)

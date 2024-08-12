@@ -5,7 +5,7 @@ using ReactiveUI.Fody.Helpers;
 using Splat;
 using System.Reactive;
 using System.Reactive.Linq;
-using System.Windows;
+using v2rayN.Base;
 using v2rayN.Enums;
 using v2rayN.Handler;
 using v2rayN.Models;
@@ -15,10 +15,8 @@ using static v2rayN.Models.ClashProxies;
 
 namespace v2rayN.ViewModels
 {
-    public class ClashProxiesViewModel : ReactiveObject
+    public class ClashProxiesViewModel : MyReactiveObject
     {
-        private static Config _config;
-        private NoticeHandler? _noticeHandler;
         private Dictionary<String, ProxiesItem>? proxies;
         private Dictionary<String, ProvidersItem>? providers;
         private int delayTimeout = 99999999;
@@ -49,10 +47,11 @@ namespace v2rayN.ViewModels
         [Reactive]
         public bool AutoRefresh { get; set; }
 
-        public ClashProxiesViewModel()
+        public ClashProxiesViewModel(Func<EViewAction, object?, bool>? updateView)
         {
             _noticeHandler = Locator.Current.GetService<NoticeHandler>();
             _config = LazyConfig.Instance.GetConfig();
+            _updateView = updateView;
 
             SelectedGroup = new();
             SelectedDetail = new();
@@ -150,20 +149,6 @@ namespace v2rayN.ViewModels
             ProxiesDelayTest();
         }
 
-        public void ProxiesClear()
-        {
-            proxies = null;
-            providers = null;
-
-            ClashApiHandler.Instance.SetProxies(proxies);
-
-            Application.Current?.Dispatcher.Invoke((Action)(() =>
-            {
-                _proxyGroups.Clear();
-                _proxyDetails.Clear();
-            }));
-        }
-
         public void ProxiesDelayTest()
         {
             ProxiesDelayTest(true);
@@ -198,15 +183,12 @@ namespace v2rayN.ViewModels
                 }
                 if (refreshUI)
                 {
-                    Application.Current?.Dispatcher.Invoke((Action)(() =>
-                    {
-                        RefreshProxyGroups();
-                    }));
+                    _updateView?.Invoke(EViewAction.DispatcherRefreshProxyGroups, null);
                 }
             });
         }
 
-        private void RefreshProxyGroups()
+        public void RefreshProxyGroups()
         {
             var selectedName = SelectedGroup?.name;
             _proxyGroups.Clear();
@@ -426,32 +408,35 @@ namespace v2rayN.ViewModels
                 {
                     return;
                 }
-                Application.Current?.Dispatcher.Invoke((Action)(() =>
-                {
-                    //UpdateHandler(false, $"{item.name}={result}");
-                    var detail = _proxyDetails.Where(it => it.name == item.name).FirstOrDefault();
-                    if (detail != null)
-                    {
-                        var dicResult = JsonUtils.Deserialize<Dictionary<string, object>>(result);
-                        if (dicResult != null && dicResult.ContainsKey("delay"))
-                        {
-                            detail.delay = Convert.ToInt32(dicResult["delay"].ToString());
-                            detail.delayName = $"{detail.delay}ms";
-                        }
-                        else if (dicResult != null && dicResult.ContainsKey("message"))
-                        {
-                            detail.delay = delayTimeout;
-                            detail.delayName = $"{dicResult["message"]}";
-                        }
-                        else
-                        {
-                            detail.delay = delayTimeout;
-                            detail.delayName = String.Empty;
-                        }
-                        _proxyDetails.Replace(detail, JsonUtils.DeepCopy(detail));
-                    }
-                }));
+
+                _updateView?.Invoke(EViewAction.DispatcherProxiesDelayTest, new SpeedTestResult() { IndexId = item.name, Delay = result });
             });
+        }
+
+        public void ProxiesDelayTestResult(SpeedTestResult result)
+        {
+            //UpdateHandler(false, $"{item.name}={result}");
+            var detail = _proxyDetails.Where(it => it.name == result.IndexId).FirstOrDefault();
+            if (detail != null)
+            {
+                var dicResult = JsonUtils.Deserialize<Dictionary<string, object>>(result.Delay);
+                if (dicResult != null && dicResult.ContainsKey("delay"))
+                {
+                    detail.delay = Convert.ToInt32(dicResult["delay"].ToString());
+                    detail.delayName = $"{detail.delay}ms";
+                }
+                else if (dicResult != null && dicResult.ContainsKey("message"))
+                {
+                    detail.delay = delayTimeout;
+                    detail.delayName = $"{dicResult["message"]}";
+                }
+                else
+                {
+                    detail.delay = delayTimeout;
+                    detail.delayName = String.Empty;
+                }
+                _proxyDetails.Replace(detail, JsonUtils.DeepCopy(detail));
+            }
         }
 
         #endregion proxy function

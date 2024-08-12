@@ -8,16 +8,14 @@ using ReactiveUI.Fody.Helpers;
 using Splat;
 using System.Reactive.Linq;
 using System.Windows;
+using v2rayN.Base;
 using v2rayN.Handler;
-using v2rayN.Models;
 using v2rayN.Resx;
 
 namespace v2rayN.ViewModels
 {
-    public class ThemeSettingViewModel : ReactiveObject
+    public class ThemeSettingViewModel : MyReactiveObject
     {
-        private static Config _config;
-        private NoticeHandler? _noticeHandler;
         private readonly PaletteHelper _paletteHelper = new();
 
         [Reactive]
@@ -52,7 +50,7 @@ namespace v2rayN.ViewModels
         {
             if (FollowSystemTheme)
             {
-                ModifyTheme(!Utils.IsLightTheme());
+                ModifyTheme(!WindowsUtils.IsLightTheme());
             }
             else
             {
@@ -106,7 +104,7 @@ namespace v2rayN.ViewModels
                             ConfigHandler.SaveConfig(_config);
                             if (FollowSystemTheme)
                             {
-                                ModifyTheme(!Utils.IsLightTheme());
+                                ModifyTheme(!WindowsUtils.IsLightTheme());
                             }
                             else
                             {
@@ -175,8 +173,7 @@ namespace v2rayN.ViewModels
 
             theme.SetBaseTheme(isDarkTheme ? BaseTheme.Dark : BaseTheme.Light);
             _paletteHelper.SetTheme(theme);
-
-            Utils.SetDarkBorder(Application.Current.MainWindow, isDarkTheme);
+            WindowsUtils.SetDarkBorder(Application.Current.MainWindow, isDarkTheme);
         }
 
         public void ChangePrimaryColor(System.Windows.Media.Color color)
