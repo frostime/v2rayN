@@ -159,7 +159,7 @@ namespace v2rayN.ViewModels
 
         public MainWindowViewModel(Func<EViewAction, object?, bool>? updateView)
         {
-            _config = LazyConfig.Instance.GetConfig();
+            _config = LazyConfig.Instance.Config;
             _noticeHandler = Locator.Current.GetService<NoticeHandler>();
             _updateView = updateView;
 
@@ -170,7 +170,7 @@ namespace v2rayN.ViewModels
             SelectedServer = new();
             if (_config.tunModeItem.enableTun)
             {
-                if (Utils.IsAdministrator())
+                if (WindowsUtils.IsAdministrator())
                 {
                     EnableTun = true;
                 }
@@ -381,7 +381,7 @@ namespace v2rayN.ViewModels
                 StatisticsHandler.Instance.Init(_config, UpdateStatisticsHandler);
             }
 
-            RegUpdateTask(_config, UpdateTaskHandler);
+            TaskHandler.Instance.RegUpdateTask(_config, UpdateTaskHandler);
             RefreshRoutingsMenu();
             //RefreshServers();
 
@@ -421,6 +421,10 @@ namespace v2rayN.ViewModels
                 if (indexIdOld != _config.indexId)
                 {
                     Reload();
+                }
+                if (_config.uiItem.enableAutoAdjustMainLvColWidth)
+                {
+                    Locator.Current.GetService<ProfilesViewModel>()?.AutofitColumnWidth();
                 }
             }
         }
@@ -462,11 +466,11 @@ namespace v2rayN.ViewModels
 
                 if (blWindowsShutDown)
                 {
-                    SysProxyHandle.ResetIEProxy4WindowsShutDown();
+                    SysProxyHandler.ResetIEProxy4WindowsShutDown();
                 }
                 else
                 {
-                    SysProxyHandle.UpdateSysProxy(_config, true);
+                    SysProxyHandler.UpdateSysProxy(_config, true);
                 }
 
                 ProfileExHandler.Instance.SaveTo();
@@ -652,7 +656,7 @@ namespace v2rayN.ViewModels
             {
                 return;
             }
-            (new UpdateHandle()).RunAvailabilityCheck((bool success, string msg) =>
+            (new UpdateHandler()).RunAvailabilityCheck((bool success, string msg) =>
             {
                 _noticeHandler?.SendMessage(msg, true);
 
@@ -683,7 +687,7 @@ namespace v2rayN.ViewModels
 
         private void UpdateSubscriptionProcess(string subId, bool blProxy)
         {
-            (new UpdateHandle()).UpdateSubscriptionProcess(_config, subId, blProxy, UpdateTaskHandler);
+            (new UpdateHandler()).UpdateSubscriptionProcess(_config, subId, blProxy, UpdateTaskHandler);
         }
 
         #endregion Subscription
@@ -753,7 +757,7 @@ namespace v2rayN.ViewModels
                     MyAppExit(false);
                 }
             }
-            (new UpdateHandle()).CheckUpdateGuiN(_config, _updateUI, _config.guiItem.checkPreReleaseUpdate);
+            (new UpdateHandler()).CheckUpdateGuiN(_config, _updateUI, _config.guiItem.checkPreReleaseUpdate);
         }
 
         private void CheckUpdateCore(ECoreType type, bool? preRelease)
@@ -782,12 +786,12 @@ namespace v2rayN.ViewModels
                     }
                 }
             }
-            (new UpdateHandle()).CheckUpdateCore(type, _config, _updateUI, preRelease ?? _config.guiItem.checkPreReleaseUpdate);
+            (new UpdateHandler()).CheckUpdateCore(type, _config, _updateUI, preRelease ?? _config.guiItem.checkPreReleaseUpdate);
         }
 
         private void CheckUpdateGeo()
         {
-            (new UpdateHandle()).UpdateGeoFileAll(_config, UpdateTaskHandler);
+            (new UpdateHandler()).UpdateGeoFileAll(_config, UpdateTaskHandler);
         }
 
         #endregion CheckUpdate
@@ -824,7 +828,7 @@ namespace v2rayN.ViewModels
             {
                 if (_config.tunModeItem.enableTun)
                 {
-                    Thread.Sleep(1000);
+                    Task.Delay(1000).Wait();
                     WindowsUtils.RemoveTunDevice();
                 }
 
@@ -861,7 +865,7 @@ namespace v2rayN.ViewModels
 
         private void ChangeSystemProxyStatus(ESysProxyType type, bool blChange)
         {
-            SysProxyHandle.UpdateSysProxy(_config, _config.tunModeItem.enableTun ? true : false);
+            SysProxyHandler.UpdateSysProxy(_config, _config.tunModeItem.enableTun ? true : false);
             _noticeHandler?.SendMessage($"{ResUI.TipChangeSystemProxy} - {_config.systemProxyItem.sysProxyType.ToString()}", true);
 
             BlSystemProxyClear = (type == ESysProxyType.ForcedClear);
@@ -947,7 +951,7 @@ namespace v2rayN.ViewModels
             {
                 _config.tunModeItem.enableTun = EnableTun;
                 // When running as a non-administrator, reboot to administrator mode
-                if (EnableTun && !Utils.IsAdministrator())
+                if (EnableTun && !WindowsUtils.IsAdministrator())
                 {
                     _config.tunModeItem.enableTun = false;
                     RebootAsAdmin();
@@ -1011,73 +1015,5 @@ namespace v2rayN.ViewModels
         }
 
         #endregion UI
-
-        #region UpdateTask
-
-        private void RegUpdateTask(Config config, Action<bool, string> update)
-        {
-            Task.Run(() => UpdateTaskRunSubscription(config, update));
-            Task.Run(() => UpdateTaskRunGeo(config, update));
-        }
-
-        private async Task UpdateTaskRunSubscription(Config config, Action<bool, string> update)
-        {
-            await Task.Delay(60000);
-            Logging.SaveLog("UpdateTaskRunSubscription");
-
-            var updateHandle = new UpdateHandle();
-            while (true)
-            {
-                var updateTime = ((DateTimeOffset)DateTime.Now).ToUnixTimeSeconds();
-                var lstSubs = LazyConfig.Instance.SubItems()
-                            .Where(t => t.autoUpdateInterval > 0)
-                            .Where(t => updateTime - t.updateTime >= t.autoUpdateInterval * 60)
-                            .ToList();
-
-                foreach (var item in lstSubs)
-                {
-                    updateHandle.UpdateSubscriptionProcess(config, item.id, true, (bool success, string msg) =>
-                    {
-                        update(success, msg);
-                        if (success)
-                            Logging.SaveLog("subscription" + msg);
-                    });
-                    item.updateTime = updateTime;
-                    ConfigHandler.AddSubItem(config, item);
-
-                    await Task.Delay(5000);
-                }
-                await Task.Delay(60000);
-            }
-        }
-
-        private async Task UpdateTaskRunGeo(Config config, Action<bool, string> update)
-        {
-            var autoUpdateGeoTime = DateTime.Now;
-
-            await Task.Delay(1000 * 120);
-            Logging.SaveLog("UpdateTaskRunGeo");
-
-            var updateHandle = new UpdateHandle();
-            while (true)
-            {
-                var dtNow = DateTime.Now;
-                if (config.guiItem.autoUpdateInterval > 0)
-                {
-                    if ((dtNow - autoUpdateGeoTime).Hours % config.guiItem.autoUpdateInterval == 0)
-                    {
-                        updateHandle.UpdateGeoFileAll(config, (bool success, string msg) =>
-                        {
-                            update(false, msg);
-                        });
-                        autoUpdateGeoTime = dtNow;
-                    }
-                }
-
-                await Task.Delay(1000 * 3600);
-            }
-        }
-
-        #endregion UpdateTask
     }
 }

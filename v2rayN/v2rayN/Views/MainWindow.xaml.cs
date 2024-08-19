@@ -25,7 +25,7 @@ namespace v2rayN.Views
         {
             InitializeComponent();
 
-            _config = LazyConfig.Instance.GetConfig();
+            _config = LazyConfig.Instance.Config;
 
             App.Current.SessionEnding += Current_SessionEnding;
             this.Closing += MainWindow_Closing;
@@ -37,7 +37,7 @@ namespace v2rayN.Views
             ViewModel = new MainWindowViewModel(UpdateViewHandler);
             Locator.CurrentMutable.RegisterLazySingleton(() => ViewModel, typeof(MainWindowViewModel));
 
-            MainFormHandler.Instance.RegisterGlobalHotkey(_config, OnHotkeyHandler, null);
+            WindowsHandler.Instance.RegisterGlobalHotkey(_config, OnHotkeyHandler, null);
 
             this.WhenActivated(disposables =>
             {
@@ -148,7 +148,7 @@ namespace v2rayN.Views
                 }
             });
 
-            var IsAdministrator = Utils.IsAdministrator();
+            var IsAdministrator = WindowsUtils.IsAdministrator();
             this.Title = $"{Utils.GetVersion()} - {(IsAdministrator ? ResUI.RunAsAdmin : ResUI.NotRunAsAdmin)}";
 
             if (!_config.guiItem.enableHWA)
@@ -252,8 +252,8 @@ namespace v2rayN.Views
                 case EViewAction.DispatcherRefreshIcon:
                     Application.Current?.Dispatcher.Invoke((() =>
                     {
-                        tbNotify.Icon = MainFormHandler.Instance.GetNotifyIcon(_config);
-                        this.Icon = MainFormHandler.Instance.GetAppIcon(_config);
+                        tbNotify.Icon = WindowsHandler.Instance.GetNotifyIcon(_config);
+                        this.Icon = WindowsHandler.Instance.GetAppIcon(_config);
                     }), DispatcherPriority.Normal);
                     break;
 
@@ -447,7 +447,7 @@ namespace v2rayN.Views
 
         private void AddHelpMenuItem()
         {
-            var coreInfo = LazyConfig.Instance.GetCoreInfo();
+            var coreInfo = CoreInfoHandler.Instance.GetCoreInfo();
             foreach (var it in coreInfo
                 .Where(t => t.coreType != ECoreType.v2fly
                             && t.coreType != ECoreType.clash

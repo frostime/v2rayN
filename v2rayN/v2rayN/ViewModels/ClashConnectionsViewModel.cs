@@ -31,7 +31,7 @@ namespace v2rayN.ViewModels
 
         public ClashConnectionsViewModel(Func<EViewAction, object?, bool>? updateView)
         {
-            _config = LazyConfig.Instance.GetConfig();
+            _config = LazyConfig.Instance.Config;
             _updateView = updateView;
             SortingSelected = _config.clashUIItem.connectionsSorting;
             AutoRefresh = _config.clashUIItem.connectionsAutoRefresh;
@@ -96,7 +96,7 @@ namespace v2rayN.ViewModels
                           GetClashConnections();
                           lastTime = dtNow;
                       }
-                      Thread.Sleep(1000);
+                      Task.Delay(1000).Wait();
                   }
               });
         }
