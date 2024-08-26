@@ -4,9 +4,8 @@ using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 using System.Reactive;
 using System.Reactive.Linq;
-using v2rayN.Base;
 
-namespace v2rayN.ViewModels
+namespace ServiceLib.ViewModels
 {
     public class ClashConnectionsViewModel : MyReactiveObject
     {
@@ -26,7 +25,7 @@ namespace v2rayN.ViewModels
         [Reactive]
         public bool AutoRefresh { get; set; }
 
-        public ClashConnectionsViewModel(Func<EViewAction, object?, bool>? updateView)
+        public ClashConnectionsViewModel(Func<EViewAction, object?, Task<bool>>? updateView)
         {
             _config = LazyConfig.Instance.Config;
             _updateView = updateView;
@@ -100,14 +99,14 @@ namespace v2rayN.ViewModels
 
         private void GetClashConnections()
         {
-            ClashApiHandler.Instance.GetClashConnections(_config, (it) =>
+            ClashApiHandler.Instance.GetClashConnections(_config, async (it) =>
             {
                 if (it == null)
                 {
                     return;
                 }
 
-                _updateView?.Invoke(EViewAction.DispatcherRefreshConnections, it?.connections);
+                await _updateView?.Invoke(EViewAction.DispatcherRefreshConnections, it?.connections);
             });
         }
 

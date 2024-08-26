@@ -2,10 +2,8 @@
 using ReactiveUI.Fody.Helpers;
 using Splat;
 using System.Reactive;
-using v2rayN.Base;
-using v2rayN.Handler;
 
-namespace v2rayN.ViewModels
+namespace ServiceLib.ViewModels
 {
     public class OptionSettingViewModel : MyReactiveObject
     {
@@ -102,7 +100,7 @@ namespace v2rayN.ViewModels
 
         public ReactiveCommand<Unit, Unit> SaveCmd { get; }
 
-        public OptionSettingViewModel(Func<EViewAction, object?, bool>? updateView)
+        public OptionSettingViewModel(Func<EViewAction, object?, Task<bool>>? updateView)
         {
             _config = LazyConfig.Instance.Config;
             _noticeHandler = Locator.Current.GetService<NoticeHandler>();
@@ -192,7 +190,7 @@ namespace v2rayN.ViewModels
 
             SaveCmd = ReactiveCommand.Create(() =>
             {
-                SaveSetting();
+                SaveSettingAsync();
             });
         }
 
@@ -248,7 +246,7 @@ namespace v2rayN.ViewModels
             });
         }
 
-        private void SaveSetting()
+        private async Task SaveSettingAsync()
         {
             if (Utils.IsNullOrEmpty(localPort.ToString()) || !Utils.IsNumeric(localPort.ToString())
                || localPort <= 0 || localPort >= Global.MaxPort)
@@ -345,7 +343,7 @@ namespace v2rayN.ViewModels
                 {
                     _noticeHandler?.Enqueue(ResUI.OperationSuccess);
                 }
-                _updateView?.Invoke(EViewAction.CloseWindow, null);
+                await _updateView?.Invoke(EViewAction.CloseWindow, null);
             }
             else
             {

@@ -5,12 +5,10 @@ using ReactiveUI.Fody.Helpers;
 using Splat;
 using System.Reactive;
 using System.Reactive.Linq;
-using v2rayN.Base;
-using v2rayN.Handler;
 using static ServiceLib.Models.ClashProviders;
 using static ServiceLib.Models.ClashProxies;
 
-namespace v2rayN.ViewModels
+namespace ServiceLib.ViewModels
 {
     public class ClashProxiesViewModel : MyReactiveObject
     {
@@ -44,7 +42,7 @@ namespace v2rayN.ViewModels
         [Reactive]
         public bool AutoRefresh { get; set; }
 
-        public ClashProxiesViewModel(Func<EViewAction, object?, bool>? updateView)
+        public ClashProxiesViewModel(Func<EViewAction, object?, Task<bool>>? updateView)
         {
             _noticeHandler = Locator.Current.GetService<NoticeHandler>();
             _config = LazyConfig.Instance.Config;
@@ -169,7 +167,7 @@ namespace v2rayN.ViewModels
 
         private void GetClashProxies(bool refreshUI)
         {
-            ClashApiHandler.Instance.GetClashProxies(_config, (it, it2) =>
+            ClashApiHandler.Instance.GetClashProxies(_config, async (it, it2) =>
             {
                 //UpdateHandler(false, "Refresh Clash Proxies");
                 _proxies = it?.proxies;
@@ -181,7 +179,7 @@ namespace v2rayN.ViewModels
                 }
                 if (refreshUI)
                 {
-                    _updateView?.Invoke(EViewAction.DispatcherRefreshProxyGroups, null);
+                    await _updateView?.Invoke(EViewAction.DispatcherRefreshProxyGroups, null);
                 }
             });
         }
@@ -388,7 +386,7 @@ namespace v2rayN.ViewModels
         {
             //UpdateHandler(false, "Clash Proxies Latency Test");
 
-            ClashApiHandler.Instance.ClashProxiesDelayTest(blAll, _proxyDetails.ToList(), (item, result) =>
+            ClashApiHandler.Instance.ClashProxiesDelayTest(blAll, _proxyDetails.ToList(), async (item, result) =>
             {
                 if (item == null)
                 {
@@ -400,7 +398,7 @@ namespace v2rayN.ViewModels
                     return;
                 }
 
-                _updateView?.Invoke(EViewAction.DispatcherProxiesDelayTest, new SpeedTestResult() { IndexId = item.name, Delay = result });
+                await _updateView?.Invoke(EViewAction.DispatcherProxiesDelayTest, new SpeedTestResult() { IndexId = item.name, Delay = result });
             });
         }
 

@@ -2,10 +2,8 @@
 using ReactiveUI.Fody.Helpers;
 using Splat;
 using System.Reactive;
-using v2rayN.Base;
-using v2rayN.Handler;
 
-namespace v2rayN.ViewModels
+namespace ServiceLib.ViewModels
 {
     public class SubEditViewModel : MyReactiveObject
     {
@@ -14,7 +12,7 @@ namespace v2rayN.ViewModels
 
         public ReactiveCommand<Unit, Unit> SaveCmd { get; }
 
-        public SubEditViewModel(SubItem subItem, Func<EViewAction, object?, bool>? updateView)
+        public SubEditViewModel(SubItem subItem, Func<EViewAction, object?, Task<bool>>? updateView)
         {
             _config = LazyConfig.Instance.Config;
             _noticeHandler = Locator.Current.GetService<NoticeHandler>();
@@ -31,11 +29,11 @@ namespace v2rayN.ViewModels
 
             SaveCmd = ReactiveCommand.Create(() =>
             {
-                SaveSub();
+                SaveSubAsync();
             });
         }
 
-        private void SaveSub()
+        private async Task SaveSubAsync()
         {
             string remarks = SelectedSource.remarks;
             if (Utils.IsNullOrEmpty(remarks))
@@ -47,7 +45,7 @@ namespace v2rayN.ViewModels
             if (ConfigHandler.AddSubItem(_config, SelectedSource) == 0)
             {
                 _noticeHandler?.Enqueue(ResUI.OperationSuccess);
-                _updateView?.Invoke(EViewAction.CloseWindow, null);
+                await _updateView?.Invoke(EViewAction.CloseWindow, null);
             }
             else
             {

@@ -3,10 +3,8 @@ using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 using Splat;
 using System.Reactive;
-using v2rayN.Base;
-using v2rayN.Handler;
 
-namespace v2rayN.ViewModels
+namespace ServiceLib.ViewModels
 {
     public class RoutingRuleSettingViewModel : MyReactiveObject
     {
@@ -36,7 +34,7 @@ namespace v2rayN.ViewModels
 
         public ReactiveCommand<Unit, Unit> SaveCmd { get; }
 
-        public RoutingRuleSettingViewModel(RoutingItem routingItem, Func<EViewAction, object?, bool>? updateView)
+        public RoutingRuleSettingViewModel(RoutingItem routingItem, Func<EViewAction, object?, Task<bool>>? updateView)
         {
             _config = LazyConfig.Instance.Config;
             _noticeHandler = Locator.Current.GetService<NoticeHandler>();
@@ -62,15 +60,15 @@ namespace v2rayN.ViewModels
 
             RuleAddCmd = ReactiveCommand.Create(() =>
             {
-                RuleEdit(true);
+                RuleEditAsync(true);
             });
-            ImportRulesFromFileCmd = ReactiveCommand.Create(() =>
+            ImportRulesFromFileCmd = ReactiveCommand.CreateFromTask(async () =>
             {
-                _updateView?.Invoke(EViewAction.ImportRulesFromFile, null);
+                await _updateView?.Invoke(EViewAction.ImportRulesFromFile, null);
             });
             ImportRulesFromClipboardCmd = ReactiveCommand.Create(() =>
             {
-                ImportRulesFromClipboard();
+                ImportRulesFromClipboardAsync(null);
             });
             ImportRulesFromUrlCmd = ReactiveCommand.Create(() =>
             {
@@ -79,11 +77,11 @@ namespace v2rayN.ViewModels
 
             RuleRemoveCmd = ReactiveCommand.Create(() =>
             {
-                RuleRemove();
+                RuleRemoveAsync();
             }, canEditRemove);
             RuleExportSelectedCmd = ReactiveCommand.Create(() =>
             {
-                RuleExportSelected();
+                RuleExportSelectedAsync();
             }, canEditRemove);
 
             MoveTopCmd = ReactiveCommand.Create(() =>
@@ -105,7 +103,7 @@ namespace v2rayN.ViewModels
 
             SaveCmd = ReactiveCommand.Create(() =>
             {
-                SaveRouting();
+                SaveRoutingAsync();
             });
         }
 
@@ -131,7 +129,7 @@ namespace v2rayN.ViewModels
             }
         }
 
-        public void RuleEdit(bool blNew)
+        public async Task RuleEditAsync(bool blNew)
         {
             RulesItem? item;
             if (blNew)
@@ -146,7 +144,7 @@ namespace v2rayN.ViewModels
                     return;
                 }
             }
-            if (_updateView?.Invoke(EViewAction.RoutingRuleDetailsWindow, item) == true)
+            if (await _updateView?.Invoke(EViewAction.RoutingRuleDetailsWindow, item) == true)
             {
                 if (blNew)
                 {
@@ -156,18 +154,18 @@ namespace v2rayN.ViewModels
             }
         }
 
-        public void RuleRemove()
+        public async Task RuleRemoveAsync()
         {
             if (SelectedSource is null || SelectedSource.outboundTag.IsNullOrEmpty())
             {
                 _noticeHandler?.Enqueue(ResUI.PleaseSelectRules);
                 return;
             }
-            if (_updateView?.Invoke(EViewAction.ShowYesNo, null) == false)
+            if (await _updateView?.Invoke(EViewAction.ShowYesNo, null) == false)
             {
                 return;
             }
-            foreach (var it in SelectedSources)
+            foreach (var it in SelectedSources ?? [SelectedSource])
             {
                 var item = _rules.FirstOrDefault(t => t.id == it?.id);
                 if (item != null)
@@ -179,7 +177,7 @@ namespace v2rayN.ViewModels
             RefreshRulesItems();
         }
 
-        public void RuleExportSelected()
+        public async Task RuleExportSelectedAsync()
         {
             if (SelectedSource is null || SelectedSource.outboundTag.IsNullOrEmpty())
             {
@@ -188,7 +186,7 @@ namespace v2rayN.ViewModels
             }
 
             var lst = new List<RulesItem4Ray>();
-            foreach (var it in SelectedSources)
+            foreach (var it in SelectedSources ?? [SelectedSource])
             {
                 var item = _rules.FirstOrDefault(t => t.id == it?.id);
                 if (item != null)
@@ -199,8 +197,7 @@ namespace v2rayN.ViewModels
             }
             if (lst.Count > 0)
             {
-                WindowsUtils.SetClipboardData(JsonUtils.Serialize(lst));
-                //_noticeHandler?.Enqueue(ResUI.OperationSuccess"));
+                await _updateView?.Invoke(EViewAction.SetClipboardData, JsonUtils.Serialize(lst));
             }
         }
 
@@ -224,7 +221,7 @@ namespace v2rayN.ViewModels
             }
         }
 
-        private void SaveRouting()
+        private async Task SaveRoutingAsync()
         {
             string remarks = SelectedRouting.remarks;
             if (Utils.IsNullOrEmpty(remarks))
@@ -243,7 +240,7 @@ namespace v2rayN.ViewModels
             if (ConfigHandler.SaveRoutingItem(_config, item) == 0)
             {
                 _noticeHandler?.Enqueue(ResUI.OperationSuccess);
-                _updateView?.Invoke(EViewAction.CloseWindow, null);
+                await _updateView?.Invoke(EViewAction.CloseWindow, null);
             }
             else
             {
@@ -253,7 +250,7 @@ namespace v2rayN.ViewModels
 
         #region Import rules
 
-        public void ImportRulesFromFile(string fileName)
+        public async Task ImportRulesFromFileAsync(string fileName)
         {
             if (Utils.IsNullOrEmpty(fileName))
             {
@@ -265,25 +262,30 @@ namespace v2rayN.ViewModels
             {
                 return;
             }
-
-            if (AddBatchRoutingRules(SelectedRouting, result) == 0)
+            var ret = await AddBatchRoutingRulesAsync(SelectedRouting, result);
+            if (ret == 0)
             {
                 RefreshRulesItems();
                 _noticeHandler?.Enqueue(ResUI.OperationSuccess);
             }
         }
 
-        private void ImportRulesFromClipboard()
+        public async Task ImportRulesFromClipboardAsync(string? clipboardData)
         {
-            var clipboardData = WindowsUtils.GetClipboardData();
-            if (AddBatchRoutingRules(SelectedRouting, clipboardData) == 0)
+            if (clipboardData == null)
+            {
+                await _updateView?.Invoke(EViewAction.ImportRulesFromClipboard, null);
+                return;
+            }
+            var ret = await AddBatchRoutingRulesAsync(SelectedRouting, clipboardData);
+            if (ret == 0)
             {
                 RefreshRulesItems();
                 _noticeHandler?.Enqueue(ResUI.OperationSuccess);
             }
         }
 
-        private void ImportRulesFromUrl()
+        private async void ImportRulesFromUrl()
         {
             var url = SelectedRouting.url;
             if (Utils.IsNullOrEmpty(url))
@@ -293,18 +295,19 @@ namespace v2rayN.ViewModels
             }
 
             DownloadHandler downloadHandle = new DownloadHandler();
-            var result = downloadHandle.TryDownloadString(url, true, "").Result;
-            if (AddBatchRoutingRules(SelectedRouting, result) == 0)
+            var result = await downloadHandle.TryDownloadString(url, true, "");
+            var ret = await AddBatchRoutingRulesAsync(SelectedRouting, result);
+            if (ret == 0)
             {
                 RefreshRulesItems();
                 _noticeHandler?.Enqueue(ResUI.OperationSuccess);
             }
         }
 
-        private int AddBatchRoutingRules(RoutingItem routingItem, string? clipboardData)
+        private async Task<int> AddBatchRoutingRulesAsync(RoutingItem routingItem, string? clipboardData)
         {
             bool blReplace = false;
-            if (_updateView?.Invoke(EViewAction.AddBatchRoutingRulesYesNo, null) == false)
+            if (await _updateView?.Invoke(EViewAction.AddBatchRoutingRulesYesNo, null) == false)
             {
                 blReplace = true;
             }

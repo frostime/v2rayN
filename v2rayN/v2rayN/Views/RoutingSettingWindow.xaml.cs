@@ -2,7 +2,6 @@
 using System.Reactive.Disposables;
 using System.Windows;
 using System.Windows.Input;
-using v2rayN.ViewModels;
 
 namespace v2rayN.Views
 {
@@ -68,25 +67,27 @@ namespace v2rayN.Views
             WindowsUtils.SetDarkBorder(this, LazyConfig.Instance.Config.uiItem.followSystemTheme ? !WindowsUtils.IsLightTheme() : LazyConfig.Instance.Config.uiItem.colorModeDark);
         }
 
-        private bool UpdateViewHandler(EViewAction action, object? obj)
+        private async Task<bool> UpdateViewHandler(EViewAction action, object? obj)
         {
-            if (action == EViewAction.CloseWindow)
+            switch (action)
             {
-                this.DialogResult = true;
+                case EViewAction.CloseWindow:
+                    this.DialogResult = true;
+                    break;
+
+                case EViewAction.ShowYesNo:
+                    if (UI.ShowYesNo(ResUI.RemoveRules) == MessageBoxResult.No)
+                    {
+                        return false;
+                    }
+                    break;
+
+                case EViewAction.RoutingRuleSettingWindow:
+
+                    if (obj is null) return false;
+                    return (new RoutingRuleSettingWindow((RoutingItem)obj)).ShowDialog() ?? false;
             }
-            else if (action == EViewAction.ShowYesNo)
-            {
-                if (UI.ShowYesNo(ResUI.RemoveRules) == MessageBoxResult.No)
-                {
-                    return false;
-                }
-            }
-            else if (action == EViewAction.RoutingRuleSettingWindow)
-            {
-                if (obj is null) return false;
-                return (new RoutingRuleSettingWindow((RoutingItem)obj)).ShowDialog() ?? false;
-            }
-            return true;
+            return await Task.FromResult(true);
         }
 
         private void RoutingSettingWindow_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
@@ -117,7 +118,7 @@ namespace v2rayN.Views
             }
             else if (e.Key == Key.Delete)
             {
-                ViewModel?.RoutingAdvancedRemove();
+                ViewModel?.RoutingAdvancedRemoveAsync();
             }
         }
 
@@ -133,7 +134,7 @@ namespace v2rayN.Views
 
         private void LstRoutings_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
-            ViewModel?.RoutingAdvancedEdit(false);
+            ViewModel?.RoutingAdvancedEditAsync(false);
         }
 
         private void linkdomainStrategy_Click(object sender, System.Windows.RoutedEventArgs e)

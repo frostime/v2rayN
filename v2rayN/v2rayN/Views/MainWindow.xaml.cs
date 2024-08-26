@@ -9,28 +9,25 @@ using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Threading;
 using v2rayN.Handler;
-using v2rayN.ViewModels;
 
 namespace v2rayN.Views
 {
     public partial class MainWindow
     {
         private static Config _config;
-        private NoticeHandler _noticeHandler;
 
         public MainWindow()
         {
             InitializeComponent();
 
             _config = LazyConfig.Instance.Config;
+            ThreadPool.RegisterWaitForSingleObject(App.ProgramStarted, OnProgramStarted, null, -1, false);
 
             App.Current.SessionEnding += Current_SessionEnding;
             this.Closing += MainWindow_Closing;
             this.PreviewKeyDown += MainWindow_PreviewKeyDown;
 
-            _noticeHandler = new NoticeHandler(MainSnackbar.MessageQueue);
-            Locator.CurrentMutable.RegisterLazySingleton(() => _noticeHandler, typeof(NoticeHandler));
-
+            MessageBus.Current.Listen<string>(Global.CommandSendSnackMsg).Subscribe(x => DelegateSnackMsg(x));
             ViewModel = new MainWindowViewModel(UpdateViewHandler);
             Locator.CurrentMutable.RegisterLazySingleton(() => ViewModel, typeof(MainWindowViewModel));
 
@@ -146,7 +143,19 @@ namespace v2rayN.Views
             });
 
             var IsAdministrator = WindowsUtils.IsAdministrator();
+            ViewModel.IsAdministrator = IsAdministrator;
             this.Title = $"{Utils.GetVersion()} - {(IsAdministrator ? ResUI.RunAsAdmin : ResUI.NotRunAsAdmin)}";
+            if (_config.tunModeItem.enableTun)
+            {
+                if (IsAdministrator)
+                {
+                    ViewModel.EnableTun = true;
+                }
+                else
+                {
+                    _config.tunModeItem.enableTun = ViewModel.EnableTun = false;
+                }
+            }
 
             if (!_config.guiItem.enableHWA)
             {
@@ -182,7 +191,20 @@ namespace v2rayN.Views
 
         #region Event
 
-        private bool UpdateViewHandler(EViewAction action, object? obj)
+        private void OnProgramStarted(object state, bool timeout)
+        {
+            ShowHideWindow(true);
+        }
+
+        private void DelegateSnackMsg(string content)
+        {
+            Application.Current?.Dispatcher.Invoke((() =>
+            {
+                MainSnackbar.MessageQueue?.Enqueue(content);
+            }), DispatcherPriority.Normal);
+        }
+
+        private async Task<bool> UpdateViewHandler(EViewAction action, object? obj)
         {
             switch (action)
             {
@@ -258,12 +280,22 @@ namespace v2rayN.Views
                     Application.Current.Shutdown();
                     break;
 
-                case EViewAction ScanScreenTask:
+                case EViewAction.ScanScreenTask:
                     ScanScreenTaskAsync().ContinueWith(_ => { });
+                    break;
+
+                case EViewAction.UpdateSysProxy:
+                    if (obj is null) return false;
+                    SysProxyHandler.UpdateSysProxy(_config, (bool)obj);
+                    break;
+
+                case EViewAction.AddServerViaClipboard:
+                    var clipboardData = WindowsUtils.GetClipboardData();
+                    ViewModel?.AddServerViaClipboardAsync(clipboardData);
                     break;
             }
 
-            return true;
+            return await Task.FromResult(true);
         }
 
         private void OnHotkeyHandler(EGlobalHotkey e)
@@ -304,14 +336,14 @@ namespace v2rayN.Views
 
             tbNotify.Dispose();
             StorageUI();
-            ViewModel?.MyAppExit(false);
+            ViewModel?.MyAppExitAsync(false);
         }
 
         private void Current_SessionEnding(object sender, SessionEndingCancelEventArgs e)
         {
             Logging.SaveLog("Current_SessionEnding");
             StorageUI();
-            ViewModel?.MyAppExit(true);
+            ViewModel?.MyAppExitAsync(true);
         }
 
         private void MainWindow_PreviewKeyDown(object sender, KeyEventArgs e)
@@ -321,7 +353,8 @@ namespace v2rayN.Views
                 switch (e.Key)
                 {
                     case Key.V:
-                        ViewModel?.AddServerViaClipboard();
+                        var clipboardData = WindowsUtils.GetClipboardData();
+                        ViewModel?.AddServerViaClipboardAsync(clipboardData);
                         break;
 
                     case Key.S:

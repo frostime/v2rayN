@@ -2,7 +2,6 @@ using ReactiveUI;
 using System.Reactive.Disposables;
 using System.Windows;
 using System.Windows.Threading;
-using v2rayN.ViewModels;
 
 namespace v2rayN.Views
 {
@@ -30,7 +29,7 @@ namespace v2rayN.Views
             });
         }
 
-        private bool UpdateViewHandler(EViewAction action, object? obj)
+        private async Task<bool> UpdateViewHandler(EViewAction action, object? obj)
         {
             switch (action)
             {
@@ -43,7 +42,7 @@ namespace v2rayN.Views
                     break;
             }
 
-            return true;
+            return await Task.FromResult(true);
         }
 
         private void btnClose_Click(object sender, System.Windows.RoutedEventArgs e)

@@ -2,10 +2,8 @@
 using ReactiveUI.Fody.Helpers;
 using Splat;
 using System.Reactive;
-using v2rayN.Base;
-using v2rayN.Handler;
 
-namespace v2rayN.ViewModels
+namespace ServiceLib.ViewModels
 {
     public class RoutingRuleDetailsViewModel : MyReactiveObject
     {
@@ -29,7 +27,7 @@ namespace v2rayN.ViewModels
 
         public ReactiveCommand<Unit, Unit> SaveCmd { get; }
 
-        public RoutingRuleDetailsViewModel(RulesItem rulesItem, Func<EViewAction, object?, bool>? updateView)
+        public RoutingRuleDetailsViewModel(RulesItem rulesItem, Func<EViewAction, object?, Task<bool>>? updateView)
         {
             _config = LazyConfig.Instance.Config;
             _noticeHandler = Locator.Current.GetService<NoticeHandler>();
@@ -53,11 +51,11 @@ namespace v2rayN.ViewModels
 
             SaveCmd = ReactiveCommand.Create(() =>
             {
-                SaveRules();
+                SaveRulesAsync();
             });
         }
 
-        private void SaveRules()
+        private async Task SaveRulesAsync()
         {
             Domain = Utils.Convert2Comma(Domain);
             IP = Utils.Convert2Comma(IP);
@@ -90,7 +88,7 @@ namespace v2rayN.ViewModels
                 return;
             }
             //_noticeHandler?.Enqueue(ResUI.OperationSuccess);
-            _updateView?.Invoke(EViewAction.CloseWindow, null);
+            await _updateView?.Invoke(EViewAction.CloseWindow, null);
         }
     }
 }

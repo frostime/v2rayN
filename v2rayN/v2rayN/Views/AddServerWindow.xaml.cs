@@ -2,7 +2,6 @@
 using System.Reactive.Disposables;
 using System.Windows;
 using System.Windows.Controls;
-using v2rayN.ViewModels;
 
 namespace v2rayN.Views
 {
@@ -221,13 +220,15 @@ namespace v2rayN.Views
             WindowsUtils.SetDarkBorder(this, LazyConfig.Instance.Config.uiItem.followSystemTheme ? !WindowsUtils.IsLightTheme() : LazyConfig.Instance.Config.uiItem.colorModeDark);
         }
 
-        private bool UpdateViewHandler(EViewAction action, object? obj)
+        private async Task<bool> UpdateViewHandler(EViewAction action, object? obj)
         {
-            if (action == EViewAction.CloseWindow)
+            switch (action)
             {
-                this.DialogResult = true;
+                case EViewAction.CloseWindow:
+                    this.DialogResult = true;
+                    break;
             }
-            return true;
+            return await Task.FromResult(true);
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)

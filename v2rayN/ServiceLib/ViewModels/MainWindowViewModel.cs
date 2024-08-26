@@ -3,14 +3,11 @@ using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 using Splat;
 using System.Diagnostics;
-using System.IO;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Text;
-using v2rayN.Base;
-using v2rayN.Handler;
 
-namespace v2rayN.ViewModels
+namespace ServiceLib.ViewModels
 {
     public class MainWindowViewModel : MyReactiveObject
     {
@@ -149,32 +146,22 @@ namespace v2rayN.ViewModels
         [Reactive]
         public int TabMainSelectedIndex { get; set; }
 
+        public bool IsAdministrator { get; set; }
+
         #endregion UI
 
         #region Init
 
-        public MainWindowViewModel(Func<EViewAction, object?, bool>? updateView)
+        public MainWindowViewModel(Func<EViewAction, object?, Task<bool>>? updateView)
         {
             _config = LazyConfig.Instance.Config;
             _noticeHandler = Locator.Current.GetService<NoticeHandler>();
             _updateView = updateView;
 
-            ThreadPool.RegisterWaitForSingleObject(App.ProgramStarted, OnProgramStarted, null, -1, false);
-            MessageBus.Current.Listen<string>(Global.CommandRefreshProfiles).Subscribe(x => _updateView?.Invoke(EViewAction.DispatcherRefreshServersBiz, null));
+            MessageBus.Current.Listen<string>(Global.CommandRefreshProfiles).Subscribe(async x => await _updateView?.Invoke(EViewAction.DispatcherRefreshServersBiz, null));
 
             SelectedRouting = new();
             SelectedServer = new();
-            if (_config.tunModeItem.enableTun)
-            {
-                if (WindowsUtils.IsAdministrator())
-                {
-                    EnableTun = true;
-                }
-                else
-                {
-                    _config.tunModeItem.enableTun = EnableTun = false;
-                }
-            }
 
             Init();
 
@@ -183,7 +170,7 @@ namespace v2rayN.ViewModels
             this.WhenAnyValue(
                 x => x.SelectedRouting,
                 y => y != null && !y.remarks.IsNullOrEmpty())
-                    .Subscribe(c => RoutingSelectedChanged(c));
+                    .Subscribe(c => RoutingSelectedChangedAsync(c));
 
             this.WhenAnyValue(
               x => x.SelectedServer,
@@ -204,57 +191,57 @@ namespace v2rayN.ViewModels
             //servers
             AddVmessServerCmd = ReactiveCommand.Create(() =>
             {
-                AddServer(true, EConfigType.VMess);
+                AddServerAsync(true, EConfigType.VMess);
             });
             AddVlessServerCmd = ReactiveCommand.Create(() =>
             {
-                AddServer(true, EConfigType.VLESS);
+                AddServerAsync(true, EConfigType.VLESS);
             });
             AddShadowsocksServerCmd = ReactiveCommand.Create(() =>
             {
-                AddServer(true, EConfigType.Shadowsocks);
+                AddServerAsync(true, EConfigType.Shadowsocks);
             });
             AddSocksServerCmd = ReactiveCommand.Create(() =>
             {
-                AddServer(true, EConfigType.Socks);
+                AddServerAsync(true, EConfigType.Socks);
             });
             AddHttpServerCmd = ReactiveCommand.Create(() =>
             {
-                AddServer(true, EConfigType.Http);
+                AddServerAsync(true, EConfigType.Http);
             });
             AddTrojanServerCmd = ReactiveCommand.Create(() =>
             {
-                AddServer(true, EConfigType.Trojan);
+                AddServerAsync(true, EConfigType.Trojan);
             });
             AddHysteria2ServerCmd = ReactiveCommand.Create(() =>
             {
-                AddServer(true, EConfigType.Hysteria2);
+                AddServerAsync(true, EConfigType.Hysteria2);
             });
             AddTuicServerCmd = ReactiveCommand.Create(() =>
             {
-                AddServer(true, EConfigType.Tuic);
+                AddServerAsync(true, EConfigType.Tuic);
             });
             AddWireguardServerCmd = ReactiveCommand.Create(() =>
             {
-                AddServer(true, EConfigType.Wireguard);
+                AddServerAsync(true, EConfigType.Wireguard);
             });
             AddCustomServerCmd = ReactiveCommand.Create(() =>
             {
-                AddServer(true, EConfigType.Custom);
+                AddServerAsync(true, EConfigType.Custom);
             });
             AddServerViaClipboardCmd = ReactiveCommand.Create(() =>
             {
-                AddServerViaClipboard();
+                AddServerViaClipboardAsync(null);
             });
-            AddServerViaScanCmd = ReactiveCommand.Create(() =>
+            AddServerViaScanCmd = ReactiveCommand.CreateFromTask(async () =>
             {
-                _updateView?.Invoke(EViewAction.ScanScreenTask, null);
+                await _updateView?.Invoke(EViewAction.ScanScreenTask, null);
             });
 
             //Subscription
             SubSettingCmd = ReactiveCommand.Create(() =>
             {
-                SubSetting();
+                SubSettingAsync();
             });
 
             SubUpdateCmd = ReactiveCommand.Create(() =>
@@ -277,19 +264,19 @@ namespace v2rayN.ViewModels
             //Setting
             OptionSettingCmd = ReactiveCommand.Create(() =>
             {
-                OptionSetting();
+                OptionSettingAsync();
             });
             RoutingSettingCmd = ReactiveCommand.Create(() =>
             {
-                RoutingSetting();
+                RoutingSettingAsync();
             });
             DNSSettingCmd = ReactiveCommand.Create(() =>
             {
-                DNSSetting();
+                DNSSettingAsync();
             });
-            GlobalHotkeySettingCmd = ReactiveCommand.Create(() =>
+            GlobalHotkeySettingCmd = ReactiveCommand.CreateFromTask(async () =>
             {
-                if (_updateView?.Invoke(EViewAction.GlobalHotkeySettingWindow, null) == true)
+                if (await _updateView?.Invoke(EViewAction.GlobalHotkeySettingWindow, null) == true)
                 {
                     _noticeHandler?.Enqueue(ResUI.OperationSuccess);
                 }
@@ -335,9 +322,9 @@ namespace v2rayN.ViewModels
                 Reload();
             });
 
-            NotifyLeftClickCmd = ReactiveCommand.Create(() =>
+            NotifyLeftClickCmd = ReactiveCommand.CreateFromTask(async () =>
             {
-                _updateView?.Invoke(EViewAction.ShowHideWindow, null);
+                await _updateView?.Invoke(EViewAction.ShowHideWindow, null);
             });
 
             //System proxy
@@ -382,12 +369,7 @@ namespace v2rayN.ViewModels
             //RefreshServers();
 
             Reload();
-            ChangeSystemProxyStatus(_config.systemProxyItem.sysProxyType, true);
-        }
-
-        private void OnProgramStarted(object state, bool timeout)
-        {
-            _updateView?.Invoke(EViewAction.ShowHideWindow, true);
+            ChangeSystemProxyStatusAsync(_config.systemProxyItem.sysProxyType, true);
         }
 
         #endregion Init
@@ -420,7 +402,7 @@ namespace v2rayN.ViewModels
                 }
                 if (_config.uiItem.enableAutoAdjustMainLvColWidth)
                 {
-                    Locator.Current.GetService<ProfilesViewModel>()?.AutofitColumnWidth();
+                    Locator.Current.GetService<ProfilesViewModel>()?.AutofitColumnWidthAsync();
                 }
             }
         }
@@ -452,35 +434,26 @@ namespace v2rayN.ViewModels
             }
         }
 
-        public void MyAppExit(bool blWindowsShutDown)
+        public async Task MyAppExitAsync(bool blWindowsShutDown)
         {
             try
             {
                 Logging.SaveLog("MyAppExit Begin");
+                //if (blWindowsShutDown)
+                await _updateView?.Invoke(EViewAction.UpdateSysProxy, true);
 
                 ConfigHandler.SaveConfig(_config);
-
-                if (blWindowsShutDown)
-                {
-                    SysProxyHandler.ResetIEProxy4WindowsShutDown();
-                }
-                else
-                {
-                    SysProxyHandler.UpdateSysProxy(_config, true);
-                }
-
                 ProfileExHandler.Instance.SaveTo();
-
                 StatisticsHandler.Instance.SaveTo();
                 StatisticsHandler.Instance.Close();
-
                 _coreHandler.CoreStop();
+
                 Logging.SaveLog("MyAppExit End");
             }
             catch { }
             finally
             {
-                _updateView?.Invoke(EViewAction.Shutdown, null);
+                await _updateView?.Invoke(EViewAction.Shutdown, null);
             }
         }
 
@@ -546,7 +519,7 @@ namespace v2rayN.ViewModels
 
         #region Add Servers
 
-        public void AddServer(bool blNew, EConfigType eConfigType)
+        public async Task AddServerAsync(bool blNew, EConfigType eConfigType)
         {
             ProfileItem item = new()
             {
@@ -558,11 +531,11 @@ namespace v2rayN.ViewModels
             bool? ret = false;
             if (eConfigType == EConfigType.Custom)
             {
-                ret = _updateView?.Invoke(EViewAction.AddServer2Window, item);
+                ret = await _updateView?.Invoke(EViewAction.AddServer2Window, item);
             }
             else
             {
-                ret = _updateView?.Invoke(EViewAction.AddServerWindow, item);
+                ret = await _updateView?.Invoke(EViewAction.AddServerWindow, item);
             }
             if (ret == true)
             {
@@ -574,10 +547,14 @@ namespace v2rayN.ViewModels
             }
         }
 
-        public void AddServerViaClipboard()
+        public async Task AddServerViaClipboardAsync(string? clipboardData)
         {
-            var clipboardData = WindowsUtils.GetClipboardData();
-            int ret = ConfigHandler.AddBatchServers(_config, clipboardData!, _config.subIndexId, false);
+            if (clipboardData == null)
+            {
+                await _updateView?.Invoke(EViewAction.AddServerViaClipboard, null);
+                return;
+            }
+            int ret = ConfigHandler.AddBatchServers(_config, clipboardData, _config.subIndexId, false);
             if (ret > 0)
             {
                 RefreshSubscriptions();
@@ -652,7 +629,7 @@ namespace v2rayN.ViewModels
             {
                 return;
             }
-            (new UpdateHandler()).RunAvailabilityCheck((bool success, string msg) =>
+            (new UpdateHandler()).RunAvailabilityCheck(async (bool success, string msg) =>
             {
                 _noticeHandler?.SendMessage(msg, true);
 
@@ -660,7 +637,7 @@ namespace v2rayN.ViewModels
                 {
                     return;
                 }
-                _updateView?.Invoke(EViewAction.DispatcherServerAvailability, msg);
+                await _updateView?.Invoke(EViewAction.DispatcherServerAvailability, msg);
             });
         }
 
@@ -673,9 +650,9 @@ namespace v2rayN.ViewModels
 
         #region Subscription
 
-        private void SubSetting()
+        private async Task SubSettingAsync()
         {
-            if (_updateView?.Invoke(EViewAction.SubSettingWindow, null) == true)
+            if (await _updateView?.Invoke(EViewAction.SubSettingWindow, null) == true)
             {
                 RefreshSubscriptions();
             }
@@ -690,9 +667,9 @@ namespace v2rayN.ViewModels
 
         #region Setting
 
-        private void OptionSetting()
+        private async Task OptionSettingAsync()
         {
-            var ret = _updateView?.Invoke(EViewAction.OptionSettingWindow, null);
+            var ret = await _updateView?.Invoke(EViewAction.OptionSettingWindow, null);
             if (ret == true)
             {
                 //RefreshServers();
@@ -700,9 +677,9 @@ namespace v2rayN.ViewModels
             }
         }
 
-        private void RoutingSetting()
+        private async Task RoutingSettingAsync()
         {
-            var ret = _updateView?.Invoke(EViewAction.RoutingSettingWindow, null);
+            var ret = await _updateView?.Invoke(EViewAction.RoutingSettingWindow, null);
             if (ret == true)
             {
                 ConfigHandler.InitBuiltinRouting(_config);
@@ -712,9 +689,9 @@ namespace v2rayN.ViewModels
             }
         }
 
-        private void DNSSetting()
+        private async Task DNSSettingAsync()
         {
-            var ret = _updateView?.Invoke(EViewAction.DNSSettingWindow, null);
+            var ret = await _updateView?.Invoke(EViewAction.DNSSettingWindow, null);
             if (ret == true)
             {
                 Reload();
@@ -734,7 +711,7 @@ namespace v2rayN.ViewModels
             try
             {
                 Process.Start(startInfo);
-                MyAppExit(false);
+                MyAppExitAsync(false);
             }
             catch { }
         }
@@ -757,7 +734,7 @@ namespace v2rayN.ViewModels
                         {
                             StartInfo = new ProcessStartInfo
                             {
-                                FileName = "v2rayUpgrade.exe",
+                                FileName = "v2rayUpgrade",
                                 Arguments = fileName.AppendQuotes(),
                                 WorkingDirectory = Utils.StartupPath()
                             }
@@ -765,7 +742,7 @@ namespace v2rayN.ViewModels
                         process.Start();
                         if (process.Id > 0)
                         {
-                            MyAppExit(false);
+                            MyAppExitAsync(false);
                         }
                     }
                     catch (Exception ex)
@@ -819,17 +796,17 @@ namespace v2rayN.ViewModels
         {
             BlReloadEnabled = false;
 
-            LoadCore().ContinueWith(task =>
+            LoadCore().ContinueWith(async task =>
             {
                 TestServerAvailability();
 
-                _updateView?.Invoke(EViewAction.DispatcherReload, null);
+                await _updateView?.Invoke(EViewAction.DispatcherReload, null);
             });
         }
 
         public void ReloadResult()
         {
-            ChangeSystemProxyStatus(_config.systemProxyItem.sysProxyType, false);
+            ChangeSystemProxyStatusAsync(_config.systemProxyItem.sysProxyType, false);
             BlReloadEnabled = true;
             ShowClashUI = _config.IsRunningCore(ECoreType.clash);
             if (ShowClashUI)
@@ -843,11 +820,11 @@ namespace v2rayN.ViewModels
         {
             await Task.Run(() =>
             {
-                if (_config.tunModeItem.enableTun)
-                {
-                    Task.Delay(1000).Wait();
-                    WindowsUtils.RemoveTunDevice();
-                }
+                //if (_config.tunModeItem.enableTun)
+                //{
+                //    Task.Delay(1000).Wait();
+                //    WindowsUtils.RemoveTunDevice();
+                //}
 
                 var node = ConfigHandler.GetDefaultServer(_config);
                 _coreHandler.LoadCore(node);
@@ -858,7 +835,7 @@ namespace v2rayN.ViewModels
         {
             ConfigHandler.SaveConfig(_config, false);
 
-            ChangeSystemProxyStatus(ESysProxyType.ForcedClear, false);
+            ChangeSystemProxyStatusAsync(ESysProxyType.ForcedClear, false);
 
             _coreHandler.CoreStop();
         }
@@ -874,15 +851,15 @@ namespace v2rayN.ViewModels
                 return;
             }
             _config.systemProxyItem.sysProxyType = type;
-            ChangeSystemProxyStatus(type, true);
+            ChangeSystemProxyStatusAsync(type, true);
 
             SystemProxySelected = (int)_config.systemProxyItem.sysProxyType;
             ConfigHandler.SaveConfig(_config, false);
         }
 
-        private void ChangeSystemProxyStatus(ESysProxyType type, bool blChange)
+        private async Task ChangeSystemProxyStatusAsync(ESysProxyType type, bool blChange)
         {
-            SysProxyHandler.UpdateSysProxy(_config, _config.tunModeItem.enableTun ? true : false);
+            await _updateView?.Invoke(EViewAction.UpdateSysProxy, _config.tunModeItem.enableTun ? true : false);
             _noticeHandler?.SendMessage($"{ResUI.TipChangeSystemProxy} - {_config.systemProxyItem.sysProxyType.ToString()}", true);
 
             BlSystemProxyClear = (type == ESysProxyType.ForcedClear);
@@ -894,7 +871,7 @@ namespace v2rayN.ViewModels
 
             if (blChange)
             {
-                _updateView?.Invoke(EViewAction.DispatcherRefreshIcon, null);
+                await _updateView?.Invoke(EViewAction.DispatcherRefreshIcon, null);
             }
         }
 
@@ -919,7 +896,7 @@ namespace v2rayN.ViewModels
             }
         }
 
-        private void RoutingSelectedChanged(bool c)
+        private async Task RoutingSelectedChangedAsync(bool c)
         {
             if (!c)
             {
@@ -945,7 +922,7 @@ namespace v2rayN.ViewModels
             {
                 _noticeHandler?.SendMessage(ResUI.TipChangeRouting, true);
                 Reload();
-                _updateView?.Invoke(EViewAction.DispatcherRefreshIcon, null);
+                await _updateView?.Invoke(EViewAction.DispatcherRefreshIcon, null);
             }
         }
 
@@ -968,7 +945,7 @@ namespace v2rayN.ViewModels
             {
                 _config.tunModeItem.enableTun = EnableTun;
                 // When running as a non-administrator, reboot to administrator mode
-                if (EnableTun && !WindowsUtils.IsAdministrator())
+                if (EnableTun && !IsAdministrator)
                 {
                     _config.tunModeItem.enableTun = false;
                     RebootAsAdmin();
@@ -1024,9 +1001,9 @@ namespace v2rayN.ViewModels
             {
                 Observable.Range(1, 1)
                  .Delay(TimeSpan.FromSeconds(1))
-                 .Subscribe(x =>
+                 .Subscribe(async x =>
                  {
-                     _updateView?.Invoke(EViewAction.ShowHideWindow, false);
+                     await _updateView?.Invoke(EViewAction.ShowHideWindow, false);
                  });
             }
         }

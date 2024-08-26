@@ -4,7 +4,6 @@ using System.ComponentModel;
 using System.Reactive.Disposables;
 using System.Windows;
 using System.Windows.Input;
-using v2rayN.ViewModels;
 
 namespace v2rayN.Views
 {
@@ -34,30 +33,31 @@ namespace v2rayN.Views
             WindowsUtils.SetDarkBorder(this, LazyConfig.Instance.Config.uiItem.followSystemTheme ? !WindowsUtils.IsLightTheme() : LazyConfig.Instance.Config.uiItem.colorModeDark);
         }
 
-        private bool UpdateViewHandler(EViewAction action, object? obj)
+        private async Task<bool> UpdateViewHandler(EViewAction action, object? obj)
         {
-            if (action == EViewAction.CloseWindow)
+            switch (action)
             {
-                this.DialogResult = true;
+                case EViewAction.CloseWindow:
+                    this.DialogResult = true;
+                    break;
+
+                case EViewAction.ShowYesNo:
+                    if (UI.ShowYesNo(ResUI.RemoveServer) == MessageBoxResult.No)
+                    {
+                        return false;
+                    }
+                    break;
+
+                case EViewAction.SubEditWindow:
+                    if (obj is null) return false;
+                    return (new SubEditWindow((SubItem)obj)).ShowDialog() ?? false;
+
+                case EViewAction.ShareSub:
+                    if (obj is null) return false;
+                    ShareSub((string)obj);
+                    break;
             }
-            else if (action == EViewAction.ShowYesNo)
-            {
-                if (UI.ShowYesNo(ResUI.RemoveServer) == MessageBoxResult.No)
-                {
-                    return false;
-                }
-            }
-            else if (action == EViewAction.SubEditWindow)
-            {
-                if (obj is null) return false;
-                return (new SubEditWindow((SubItem)obj)).ShowDialog() ?? false;
-            }
-            else if (action == EViewAction.ShareSub)
-            {
-                if (obj is null) return false;
-                ShareSub((string)obj);
-            }
-            return true;
+            return await Task.FromResult(true);
         }
 
         private async void ShareSub(string url)
@@ -86,7 +86,7 @@ namespace v2rayN.Views
 
         private void LstSubscription_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
-            ViewModel?.EditSub(false);
+            ViewModel?.EditSubAsync(false);
         }
 
         private void LstSubscription_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)

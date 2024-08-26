@@ -4,10 +4,8 @@ using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 using Splat;
 using System.Reactive;
-using v2rayN.Base;
-using v2rayN.Handler;
 
-namespace v2rayN.ViewModels
+namespace ServiceLib.ViewModels
 {
     public class SubSettingViewModel : MyReactiveObject
     {
@@ -25,7 +23,7 @@ namespace v2rayN.ViewModels
         public ReactiveCommand<Unit, Unit> SubShareCmd { get; }
         public bool IsModified { get; set; }
 
-        public SubSettingViewModel(Func<EViewAction, object?, bool>? updateView)
+        public SubSettingViewModel(Func<EViewAction, object?, Task<bool>>? updateView)
         {
             _config = LazyConfig.Instance.Config;
             _noticeHandler = Locator.Current.GetService<NoticeHandler>();
@@ -41,19 +39,19 @@ namespace v2rayN.ViewModels
 
             SubAddCmd = ReactiveCommand.Create(() =>
             {
-                EditSub(true);
+                EditSubAsync(true);
             });
             SubDeleteCmd = ReactiveCommand.Create(() =>
             {
-                DeleteSub();
+                DeleteSubAsync();
             }, canEditRemove);
-            SubEditCmd = ReactiveCommand.Create(() =>
+            SubEditCmd = ReactiveCommand.CreateFromTask(async () =>
             {
-                EditSub(false);
+                await EditSubAsync(false);
             }, canEditRemove);
-            SubShareCmd = ReactiveCommand.Create(() =>
+            SubShareCmd = ReactiveCommand.CreateFromTask(async () =>
             {
-                _updateView?.Invoke(EViewAction.ShareSub, SelectedSource?.url);
+                await _updateView?.Invoke(EViewAction.ShareSub, SelectedSource?.url);
             }, canEditRemove);
         }
 
@@ -63,7 +61,7 @@ namespace v2rayN.ViewModels
             _subItems.AddRange(LazyConfig.Instance.SubItems().OrderBy(t => t.sort));
         }
 
-        public void EditSub(bool blNew)
+        public async Task EditSubAsync(bool blNew)
         {
             SubItem item;
             if (blNew)
@@ -78,21 +76,21 @@ namespace v2rayN.ViewModels
                     return;
                 }
             }
-            if (_updateView?.Invoke(EViewAction.SubEditWindow, item) == true)
+            if (await _updateView?.Invoke(EViewAction.SubEditWindow, item) == true)
             {
                 RefreshSubItems();
                 IsModified = true;
             }
         }
 
-        private void DeleteSub()
+        private async Task DeleteSubAsync()
         {
-            if (_updateView?.Invoke(EViewAction.ShowYesNo, null) == false)
+            if (await _updateView?.Invoke(EViewAction.ShowYesNo, null) == false)
             {
                 return;
             }
 
-            foreach (var it in SelectedSources)
+            foreach (var it in SelectedSources ?? [SelectedSource])
             {
                 ConfigHandler.DeleteSubItem(_config, it.id);
             }

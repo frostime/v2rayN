@@ -1,12 +1,9 @@
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 using Splat;
-using System.IO;
 using System.Reactive;
-using v2rayN.Base;
-using v2rayN.Handler;
 
-namespace v2rayN.ViewModels
+namespace ServiceLib.ViewModels
 {
     public class AddServer2ViewModel : MyReactiveObject
     {
@@ -18,7 +15,7 @@ namespace v2rayN.ViewModels
         public ReactiveCommand<Unit, Unit> SaveServerCmd { get; }
         public bool IsModified { get; set; }
 
-        public AddServer2ViewModel(ProfileItem profileItem, Func<EViewAction, object?, bool>? updateView)
+        public AddServer2ViewModel(ProfileItem profileItem, Func<EViewAction, object?, Task<bool>>? updateView)
         {
             _noticeHandler = Locator.Current.GetService<NoticeHandler>();
             _config = LazyConfig.Instance.Config;
@@ -33,9 +30,9 @@ namespace v2rayN.ViewModels
                 SelectedSource = JsonUtils.DeepCopy(profileItem);
             }
 
-            BrowseServerCmd = ReactiveCommand.Create(() =>
+            BrowseServerCmd = ReactiveCommand.CreateFromTask(async () =>
             {
-                _updateView?.Invoke(EViewAction.BrowseServer, null);
+                await _updateView?.Invoke(EViewAction.BrowseServer, null);
             });
 
             EditServerCmd = ReactiveCommand.Create(() =>
@@ -45,11 +42,11 @@ namespace v2rayN.ViewModels
 
             SaveServerCmd = ReactiveCommand.Create(() =>
             {
-                SaveServer();
+                SaveServerAsync();
             });
         }
 
-        private void SaveServer()
+        private async Task SaveServerAsync()
         {
             string remarks = SelectedSource.remarks;
             if (Utils.IsNullOrEmpty(remarks))
@@ -67,7 +64,7 @@ namespace v2rayN.ViewModels
             if (ConfigHandler.EditCustomServer(_config, SelectedSource) == 0)
             {
                 _noticeHandler?.Enqueue(ResUI.OperationSuccess);
-                _updateView?.Invoke(EViewAction.CloseWindow, null);
+                await _updateView?.Invoke(EViewAction.CloseWindow, null);
             }
             else
             {

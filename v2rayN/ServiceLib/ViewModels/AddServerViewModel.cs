@@ -2,10 +2,8 @@
 using ReactiveUI.Fody.Helpers;
 using Splat;
 using System.Reactive;
-using v2rayN.Base;
-using v2rayN.Handler;
 
-namespace v2rayN.ViewModels
+namespace ServiceLib.ViewModels
 {
     public class AddServerViewModel : MyReactiveObject
     {
@@ -14,7 +12,7 @@ namespace v2rayN.ViewModels
 
         public ReactiveCommand<Unit, Unit> SaveCmd { get; }
 
-        public AddServerViewModel(ProfileItem profileItem, Func<EViewAction, object?, bool>? updateView)
+        public AddServerViewModel(ProfileItem profileItem, Func<EViewAction, object?, Task<bool>>? updateView)
         {
             _config = LazyConfig.Instance.Config;
             _noticeHandler = Locator.Current.GetService<NoticeHandler>();
@@ -35,11 +33,11 @@ namespace v2rayN.ViewModels
 
             SaveCmd = ReactiveCommand.Create(() =>
             {
-                SaveServer();
+                SaveServerAsync();
             });
         }
 
-        private void SaveServer()
+        private async Task SaveServerAsync()
         {
             if (Utils.IsNullOrEmpty(SelectedSource.remarks))
             {
@@ -85,7 +83,7 @@ namespace v2rayN.ViewModels
             if (ConfigHandler.AddServer(_config, SelectedSource) == 0)
             {
                 _noticeHandler?.Enqueue(ResUI.OperationSuccess);
-                _updateView?.Invoke(EViewAction.CloseWindow, null);
+                await _updateView?.Invoke(EViewAction.CloseWindow, null);
             }
             else
             {

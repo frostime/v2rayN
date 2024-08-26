@@ -2,10 +2,8 @@
 using ReactiveUI.Fody.Helpers;
 using Splat;
 using System.Reactive;
-using v2rayN.Base;
-using v2rayN.Handler;
 
-namespace v2rayN.ViewModels
+namespace ServiceLib.ViewModels
 {
     public class DNSSettingViewModel : MyReactiveObject
     {
@@ -23,7 +21,7 @@ namespace v2rayN.ViewModels
         public ReactiveCommand<Unit, Unit> ImportDefConfig4V2rayCmd { get; }
         public ReactiveCommand<Unit, Unit> ImportDefConfig4SingboxCmd { get; }
 
-        public DNSSettingViewModel(Func<EViewAction, object?, bool>? updateView)
+        public DNSSettingViewModel(Func<EViewAction, object?, Task<bool>>? updateView)
         {
             _config = LazyConfig.Instance.Config;
             _noticeHandler = Locator.Current.GetService<NoticeHandler>();
@@ -43,7 +41,7 @@ namespace v2rayN.ViewModels
 
             SaveCmd = ReactiveCommand.Create(() =>
             {
-                SaveSetting();
+                SaveSettingAsync();
             });
 
             ImportDefConfig4V2rayCmd = ReactiveCommand.Create(() =>
@@ -58,7 +56,7 @@ namespace v2rayN.ViewModels
             });
         }
 
-        private void SaveSetting()
+        private async Task SaveSettingAsync()
         {
             if (!Utils.IsNullOrEmpty(normalDNS))
             {
@@ -109,7 +107,7 @@ namespace v2rayN.ViewModels
             ConfigHandler.SaveDNSItems(_config, item2);
 
             _noticeHandler?.Enqueue(ResUI.OperationSuccess);
-            _updateView?.Invoke(EViewAction.CloseWindow, null);
+            await _updateView?.Invoke(EViewAction.CloseWindow, null);
         }
     }
 }
