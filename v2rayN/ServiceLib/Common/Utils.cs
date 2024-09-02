@@ -495,29 +495,6 @@ namespace ServiceLib.Common
 
         #region 测速
 
-        /// <summary>
-        /// 取得本机 IP Address
-        /// </summary>
-        /// <returns></returns>
-        //public static List<string> GetHostIPAddress()
-        //{
-        //    List<string> lstIPAddress = new List<string>();
-        //    try
-        //    {
-        //        IPHostEntry IpEntry = Dns.GetHostEntry(Dns.GetHostName());
-        //        foreach (IPAddress ipa in IpEntry.AddressList)
-        //        {
-        //            if (ipa.AddressFamily == AddressFamily.InterNetwork)
-        //                lstIPAddress.Add(ipa.ToString());
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        SaveLog(ex.Message, ex);
-        //    }
-        //    return lstIPAddress;
-        //}
-
         public static void SetSecurityProtocol(bool enableSecurityProtocolTls13)
         {
             if (enableSecurityProtocolTls13)
@@ -593,20 +570,36 @@ namespace ServiceLib.Common
                 string location = GetExePath();
                 if (blFull)
                 {
-                    return string.Format("v2rayN - V{0} - {1}",
-                            FileVersionInfo.GetVersionInfo(location).FileVersion?.ToString(),
+                    return string.Format("{0} - V{1} - {2}",
+                            Global.AppName,
+                            GetVersionInfo(),
                             File.GetLastWriteTime(location).ToString("yyyy/MM/dd"));
                 }
                 else
                 {
-                    return string.Format("v2rayN/{0}",
-                        FileVersionInfo.GetVersionInfo(location).FileVersion?.ToString());
+                    return string.Format("{0}/{1}",
+                        Global.AppName,
+                        GetVersionInfo());
                 }
             }
             catch (Exception ex)
             {
                 Logging.SaveLog(ex.Message, ex);
-                return string.Empty;
+                return Global.AppName;
+            }
+        }
+
+        public static string GetVersionInfo()
+        {
+            try
+            {
+                string location = GetExePath();
+                return FileVersionInfo.GetVersionInfo(location)?.FileVersion ?? "0.0";
+            }
+            catch (Exception ex)
+            {
+                Logging.SaveLog(ex.Message, ex);
+                return "0.0";
             }
         }
 
@@ -706,7 +699,7 @@ namespace ServiceLib.Common
 
         public static string GetExeName(string name)
         {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            if (IsWindows())
             {
                 return $"{name}.exe";
             }
@@ -715,6 +708,12 @@ namespace ServiceLib.Common
                 return name;
             }
         }
+
+        public static bool IsWindows() => RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+
+        public static bool IsLinux() => RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
+
+        public static bool IsOSX() => RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
 
         #endregion 杂项
 

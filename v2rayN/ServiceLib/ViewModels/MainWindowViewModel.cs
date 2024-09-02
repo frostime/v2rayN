@@ -402,7 +402,7 @@ namespace ServiceLib.ViewModels
                 }
                 if (_config.uiItem.enableAutoAdjustMainLvColWidth)
                 {
-                    Locator.Current.GetService<ProfilesViewModel>()?.AutofitColumnWidthAsync();
+                    _updateView?.Invoke(EViewAction.AdjustMainLvColWidth, null);
                 }
             }
         }
@@ -658,7 +658,7 @@ namespace ServiceLib.ViewModels
             }
         }
 
-        private void UpdateSubscriptionProcess(string subId, bool blProxy)
+        public void UpdateSubscriptionProcess(string subId, bool blProxy)
         {
             (new UpdateHandler()).UpdateSubscriptionProcess(_config, subId, blProxy, UpdateTaskHandler);
         }
@@ -722,6 +722,16 @@ namespace ServiceLib.ViewModels
 
         private void CheckUpdateN()
         {
+            //Check for standalone windows .Net version
+            if (Utils.IsWindows()
+                && File.Exists(Path.Combine(Utils.StartupPath(), "wpfgfx_cor3.dll"))
+                && File.Exists(Path.Combine(Utils.StartupPath(), "D3DCompiler_47_cor3.dll"))
+                )
+            {
+                _noticeHandler?.SendMessageAndEnqueue(ResUI.UpdateStandalonePackageTip);
+                return;
+            }
+
             void _updateUI(bool success, string msg)
             {
                 _noticeHandler?.SendMessage(msg);
@@ -766,7 +776,18 @@ namespace ServiceLib.ViewModels
                     string fileName = Utils.GetTempPath(Utils.GetDownloadFileName(msg));
                     string toPath = Utils.GetBinPath("", type.ToString());
 
-                    FileManager.ZipExtractToFile(fileName, toPath, _config.guiItem.ignoreGeoUpdateCore ? "geo" : "");
+                    if (fileName.Contains(".tar.gz"))
+                    {
+                        //It's too complicated to unzip. TODO
+                    }
+                    else if (fileName.Contains(".gz"))
+                    {
+                        FileManager.UncompressedFile(fileName, toPath, type.ToString());
+                    }
+                    else
+                    {
+                        FileManager.ZipExtractToFile(fileName, toPath, _config.guiItem.ignoreGeoUpdateCore ? "geo" : "");
+                    }
 
                     _noticeHandler?.SendMessage(ResUI.MsgUpdateV2rayCoreSuccessfullyMore);
 
@@ -831,7 +852,7 @@ namespace ServiceLib.ViewModels
             });
         }
 
-        private void CloseCore()
+        public void CloseCore()
         {
             ConfigHandler.SaveConfig(_config, false);
 

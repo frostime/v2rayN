@@ -29,7 +29,7 @@ namespace ServiceLib.Resx {
         private static global::System.Globalization.CultureInfo resourceCulture;
         
         [global::System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        public ResUI() {
+        internal ResUI() {
         }
         
         /// <summary>
@@ -1321,6 +1321,15 @@ namespace ServiceLib.Resx {
         }
         
         /// <summary>
+        ///   查找类似 Show or hide the main window 的本地化字符串。
+        /// </summary>
+        public static string menuShowOrHideMainWindow {
+            get {
+                return ResourceManager.GetString("menuShowOrHideMainWindow", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Sort by test result 的本地化字符串。
         /// </summary>
         public static string menuSortServerResult {
@@ -2321,11 +2330,20 @@ namespace ServiceLib.Resx {
         }
         
         /// <summary>
-        ///   查找类似 txtPreSocksPort 的本地化字符串。
+        ///   查找类似 Socks port 的本地化字符串。
         /// </summary>
         public static string TbPreSocksPort {
             get {
                 return ResourceManager.GetString("TbPreSocksPort", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Custom config socks port 的本地化字符串。
+        /// </summary>
+        public static string TbPreSocksPort4Sub {
+            get {
+                return ResourceManager.GetString("TbPreSocksPort4Sub", resourceCulture);
             }
         }
         
@@ -3514,6 +3532,15 @@ namespace ServiceLib.Resx {
         public static string UngroupedServers {
             get {
                 return ResourceManager.GetString("UngroupedServers", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 You are currently running a standalone package, please manually download the SelfContained.7z file to unzip and overwrite it! 的本地化字符串。
+        /// </summary>
+        public static string UpdateStandalonePackageTip {
+            get {
+                return ResourceManager.GetString("UpdateStandalonePackageTip", resourceCulture);
             }
         }
     }

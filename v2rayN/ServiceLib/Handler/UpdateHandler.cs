@@ -50,6 +50,7 @@ namespace ServiceLib.Handler
             downloadHandle.Error += (sender2, args) =>
             {
                 _updateFunc(false, args.GetException().Message);
+                _updateFunc(false, "");
             };
             AbsoluteCompleted += (sender2, args) =>
             {
@@ -61,19 +62,20 @@ namespace ServiceLib.Handler
                     url = args.Url;
                     AskToDownload(downloadHandle, url, true).ContinueWith(task =>
                     {
-                        _updateFunc(false, url);
+                        _updateFunc(false, "");
                     });
                 }
                 else
                 {
                     _updateFunc(false, args.Msg);
+                    _updateFunc(false, "");
                 }
             };
             _updateFunc(false, string.Format(ResUI.MsgStartUpdating, ECoreType.v2rayN));
-            CheckUpdateAsync(ECoreType.v2rayN, preRelease);
+            CheckUpdateAsync(downloadHandle, ECoreType.v2rayN, preRelease);
         }
 
-        public void CheckUpdateCore(ECoreType type, Config config, Action<bool, string> update, bool preRelease)
+        public async void CheckUpdateCore(ECoreType type, Config config, Action<bool, string> update, bool preRelease)
         {
             _config = config;
             _updateFunc = update;
@@ -103,7 +105,8 @@ namespace ServiceLib.Handler
             };
             downloadHandle.Error += (sender2, args) =>
             {
-                _updateFunc(true, args.GetException().Message);
+                _updateFunc(false, args.GetException().Message); 
+                _updateFunc(false, "");
             };
 
             AbsoluteCompleted += (sender2, args) =>
@@ -116,16 +119,17 @@ namespace ServiceLib.Handler
                     url = args.Url;
                     AskToDownload(downloadHandle, url, true).ContinueWith(task =>
                     {
-                        _updateFunc(false, url);
+                        _updateFunc(false, "");
                     });
                 }
                 else
                 {
                     _updateFunc(false, args.Msg);
+                    _updateFunc(false, "");
                 }
             };
             _updateFunc(false, string.Format(ResUI.MsgStartUpdating, type));
-            CheckUpdateAsync(type, preRelease);
+            CheckUpdateAsync(downloadHandle, type, preRelease);
         }
 
         public void UpdateSubscriptionProcess(Config config, string subId, bool blProxy, Action<bool, string> update)
@@ -267,6 +271,7 @@ namespace ServiceLib.Handler
             {
                 await UpdateGeoFile("geosite", _config, update);
                 await UpdateGeoFile("geoip", _config, update);
+                _updateFunc(true, string.Format(ResUI.MsgDownloadGeoFileSuccessfully, "geo"));
             });
         }
 
@@ -282,14 +287,14 @@ namespace ServiceLib.Handler
 
         #region private
 
-        private async void CheckUpdateAsync(ECoreType type, bool preRelease)
+        private async void CheckUpdateAsync(DownloadHandler downloadHandle, ECoreType type, bool preRelease)
         {
             try
             {
                 var coreInfo = CoreInfoHandler.Instance.GetCoreInfo(type);
                 string url = coreInfo.coreReleaseApiUrl;
 
-                var result = await (new DownloadHandler()).DownloadStringAsync(url, true, "");
+                var result = await downloadHandle.DownloadStringAsync(url, true, Global.AppName);
                 if (!Utils.IsNullOrEmpty(result))
                 {
                     ResponseHandler(type, result, preRelease);
@@ -308,7 +313,7 @@ namespace ServiceLib.Handler
         }
 
         /// <summary>
-        /// 获取V2RayCore版本
+        /// 获取Core版本
         /// </summary>
         private SemanticVersion GetCoreVersion(ECoreType type)
         {
@@ -318,7 +323,7 @@ namespace ServiceLib.Handler
                 string filePath = string.Empty;
                 foreach (string name in coreInfo.coreExes)
                 {
-                    string vName = $"{name}.exe";
+                    string vName = Utils.GetExeName(name);
                     vName = Utils.GetBinPath(vName, coreInfo.coreType.ToString());
                     if (File.Exists(vName))
                     {
@@ -385,10 +390,9 @@ namespace ServiceLib.Handler
                 var body = gitHubRelease?.Body;
 
                 var coreInfo = CoreInfoHandler.Instance.GetCoreInfo(type);
-
                 SemanticVersion curVersion;
                 string message;
-                string url;
+                string? url;
                 switch (type)
                 {
                     case ECoreType.v2fly:
@@ -398,23 +402,7 @@ namespace ServiceLib.Handler
                         {
                             curVersion = GetCoreVersion(type);
                             message = string.Format(ResUI.IsLatestCore, type, curVersion.ToVersionString("v"));
-                            string osBit = "64";
-                            switch (RuntimeInformation.ProcessArchitecture)
-                            {
-                                case Architecture.Arm64:
-                                    osBit = "arm64-v8a";
-                                    break;
-
-                                case Architecture.X86:
-                                    osBit = "32";
-                                    break;
-
-                                default:
-                                    osBit = "64";
-                                    break;
-                            }
-
-                            url = string.Format(coreInfo.coreDownloadUrl64, version.ToVersionString("v"), osBit);
+                            url = string.Format(GetUrlFromCore(coreInfo), version.ToVersionString("v"));
                             break;
                         }
                     case ECoreType.clash:
@@ -423,62 +411,21 @@ namespace ServiceLib.Handler
                         {
                             curVersion = GetCoreVersion(type);
                             message = string.Format(ResUI.IsLatestCore, type, curVersion);
-                            switch (RuntimeInformation.ProcessArchitecture)
-                            {
-                                case Architecture.Arm64:
-                                    url = coreInfo.coreDownloadUrlArm64;
-                                    break;
-
-                                case Architecture.X86:
-                                    url = coreInfo.coreDownloadUrl32;
-                                    break;
-
-                                default:
-                                    url = coreInfo.coreDownloadUrl64;
-                                    break;
-                            }
-                            url = string.Format(url, version.ToVersionString("v"));
+                            url = string.Format(GetUrlFromCore(coreInfo), version.ToVersionString("v"));
                             break;
                         }
                     case ECoreType.sing_box:
                         {
                             curVersion = GetCoreVersion(type);
                             message = string.Format(ResUI.IsLatestCore, type, curVersion.ToVersionString("v"));
-                            switch (RuntimeInformation.ProcessArchitecture)
-                            {
-                                case Architecture.Arm64:
-                                    url = coreInfo.coreDownloadUrlArm64;
-                                    break;
-
-                                case Architecture.X86:
-                                    url = coreInfo.coreDownloadUrl32;
-                                    break;
-
-                                default:
-                                    url = coreInfo.coreDownloadUrl64;
-                                    break;
-                            }
-                            url = string.Format(url, version.ToVersionString("v"), version);
+                            url = string.Format(GetUrlFromCore(coreInfo), version.ToVersionString("v"), version);
                             break;
                         }
                     case ECoreType.v2rayN:
                         {
-                            curVersion = new SemanticVersion(FileVersionInfo.GetVersionInfo(Utils.GetExePath()).FileVersion.ToString());
+                            curVersion = new SemanticVersion(Utils.GetVersionInfo());
                             message = string.Format(ResUI.IsLatestN, type, curVersion);
-                            switch (RuntimeInformation.ProcessArchitecture)
-                            {
-                                case Architecture.Arm64:
-                                    url = string.Format(coreInfo.coreDownloadUrlArm64, version);
-                                    break;
-
-                                case Architecture.X86:
-                                    url = string.Format(coreInfo.coreDownloadUrl32, version);
-                                    break;
-
-                                default:
-                                    url = string.Format(coreInfo.coreDownloadUrl64, version);
-                                    break;
-                            }
+                            url = string.Format(GetUrlFromCore(coreInfo), version);
                             break;
                         }
                     default:
@@ -500,6 +447,31 @@ namespace ServiceLib.Handler
             }
         }
 
+        private string? GetUrlFromCore(CoreInfo? coreInfo)
+        {
+            if (Utils.IsWindows())
+            {
+                return RuntimeInformation.ProcessArchitecture switch
+                {
+                    Architecture.Arm64 => coreInfo?.coreDownloadUrlArm64,
+                    Architecture.X86 => coreInfo?.coreDownloadUrl32,
+                    Architecture.X64 => coreInfo?.coreDownloadUrl64,
+                    _ => null,
+                };
+            }
+            else if (Utils.IsLinux())
+            {
+                return RuntimeInformation.ProcessArchitecture switch
+                {
+                    Architecture.Arm64 => coreInfo?.coreDownloadUrlLinuxArm64,
+                    Architecture.X86 => coreInfo?.coreDownloadUrlLinux32,
+                    Architecture.X64 => coreInfo?.coreDownloadUrlLinux64,
+                    _ => null,
+                };
+            }
+            return null;
+        }
+
         private async Task AskToDownload(DownloadHandler downloadHandle, string url, bool blAsk)
         {
             //bool blDownload = false;
@@ -516,7 +488,7 @@ namespace ServiceLib.Handler
             //}
             //if (blDownload)
             //{
-            await downloadHandle.DownloadFileAsync(url, true, 600);
+            await downloadHandle.DownloadFileAsync(url, true, 60);
             //}
         }
 
