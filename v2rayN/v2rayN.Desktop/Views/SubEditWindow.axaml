@@ -150,7 +150,6 @@
                     Grid.Row="6"
                     Grid.Column="1"
                     Width="200"
-                    VerticalAlignment=" "
                     Classes="Margin8"
                     ToolTip.Tip="{x:Static resx:ResUI.LvConvertTargetTip}" />
 
@@ -243,7 +242,7 @@
                     MinHeight="100"
                     HorizontalAlignment="Stretch"
                     VerticalAlignment="Center"
-                    Classes="TextArea Margin4"
+                    Classes="TextArea Margin8"
                     MinLines="4"
                     TextWrapping="Wrap"
                     Watermark="{x:Static resx:ResUI.SubUrlTips}" />
