@@ -24,7 +24,6 @@ namespace ServiceLib.ViewModels
         {
             _config = AppHandler.Instance.Config;
             _updateView = updateView;
-            _noticeHandler = Locator.Current.GetService<NoticeHandler>();
 
             RefreshSubItems();
 
@@ -141,7 +140,7 @@ namespace ServiceLib.ViewModels
                     UpdatedPlusPlus(_geo, "");
                 }
             }
-            await (new UpdateHandler()).UpdateGeoFileAll(_config, _updateUI)
+            await (new UpdateService()).UpdateGeoFileAll(_config, _updateUI)
                 .ContinueWith(t =>
                 {
                     UpdatedPlusPlus(_geo, "");
@@ -169,7 +168,7 @@ namespace ServiceLib.ViewModels
                     UpdatedPlusPlus(_v2rayN, msg);
                 }
             }
-            await (new UpdateHandler()).CheckUpdateGuiN(_config, _updateUI, preRelease)
+            await (new UpdateService()).CheckUpdateGuiN(_config, _updateUI, preRelease)
                 .ContinueWith(t =>
                 {
                     UpdatedPlusPlus(_v2rayN, "");
@@ -189,7 +188,7 @@ namespace ServiceLib.ViewModels
                 }
             }
             var type = (ECoreType)Enum.Parse(typeof(ECoreType), item.coreType);
-            await (new UpdateHandler()).CheckUpdateCore(type, _config, _updateUI, preRelease)
+            await (new UpdateService()).CheckUpdateCore(type, _config, _updateUI, preRelease)
                 .ContinueWith(t =>
                 {
                     UpdatedPlusPlus(item.coreType, "");

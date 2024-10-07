@@ -17,7 +17,7 @@ namespace ServiceLib.ViewModels
         private string _serverFilter = string.Empty;
 
         private Dictionary<string, bool> _dicHeaderSort = new();
-        private SpeedtestHandler? _speedtestHandler;
+        private SpeedtestService? _speedtestHandler;
 
         #endregion private prop
 
@@ -98,7 +98,7 @@ namespace ServiceLib.ViewModels
         public ProfilesViewModel(Func<EViewAction, object?, Task<bool>>? updateView)
         {
             _config = AppHandler.Instance.Config;
-            _noticeHandler = Locator.Current.GetService<NoticeHandler>();
+
             _updateView = updateView;
 
             MessageBus.Current.Listen<string>(Global.CommandRefreshProfiles).Subscribe(async x => await _updateView?.Invoke(EViewAction.DispatcherRefreshServersBiz, null));
@@ -258,8 +258,8 @@ namespace ServiceLib.ViewModels
         {
             if (Utils.IsNullOrEmpty(result.IndexId))
             {
-                _noticeHandler?.SendMessageEx(result.Delay);
-                _noticeHandler?.Enqueue(result.Delay);
+                NoticeHandler.Instance.SendMessageEx(result.Delay);
+                NoticeHandler.Instance.Enqueue(result.Delay);
                 return;
             }
             var item = _profileItems.Where(it => it.indexId == result.IndexId).FirstOrDefault();
@@ -429,7 +429,7 @@ namespace ServiceLib.ViewModels
             var item = AppHandler.Instance.GetProfileItem(SelectedProfile.indexId);
             if (item is null)
             {
-                _noticeHandler?.Enqueue(ResUI.PleaseSelectServer);
+                NoticeHandler.Instance.Enqueue(ResUI.PleaseSelectServer);
                 return;
             }
             eConfigType = item.configType;
@@ -466,7 +466,7 @@ namespace ServiceLib.ViewModels
             var exists = lstSelecteds.Exists(t => t.indexId == _config.indexId);
 
             ConfigHandler.RemoveServer(_config, lstSelecteds);
-            _noticeHandler?.Enqueue(ResUI.OperationSuccess);
+            NoticeHandler.Instance.Enqueue(ResUI.OperationSuccess);
 
             RefreshServers();
             if (exists)
@@ -480,7 +480,7 @@ namespace ServiceLib.ViewModels
             var tuple = ConfigHandler.DedupServerList(_config, _config.subIndexId);
             RefreshServers();
             Reload();
-            _noticeHandler?.Enqueue(string.Format(ResUI.RemoveDuplicateServerResult, tuple.Item1, tuple.Item2));
+            NoticeHandler.Instance.Enqueue(string.Format(ResUI.RemoveDuplicateServerResult, tuple.Item1, tuple.Item2));
         }
 
         private void CopyServer()
@@ -492,7 +492,7 @@ namespace ServiceLib.ViewModels
             if (ConfigHandler.CopyServer(_config, lstSelecteds) == 0)
             {
                 RefreshServers();
-                _noticeHandler?.Enqueue(ResUI.OperationSuccess);
+                NoticeHandler.Instance.Enqueue(ResUI.OperationSuccess);
             }
         }
 
@@ -518,7 +518,7 @@ namespace ServiceLib.ViewModels
             var item = AppHandler.Instance.GetProfileItem(indexId);
             if (item is null)
             {
-                _noticeHandler?.Enqueue(ResUI.PleaseSelectServer);
+                NoticeHandler.Instance.Enqueue(ResUI.PleaseSelectServer);
                 return;
             }
 
@@ -551,7 +551,7 @@ namespace ServiceLib.ViewModels
             var item = AppHandler.Instance.GetProfileItem(SelectedProfile.indexId);
             if (item is null)
             {
-                _noticeHandler?.Enqueue(ResUI.PleaseSelectServer);
+                NoticeHandler.Instance.Enqueue(ResUI.PleaseSelectServer);
                 return;
             }
             var url = FmtHandler.GetShareUri(item);
@@ -572,7 +572,7 @@ namespace ServiceLib.ViewModels
 
             if (ConfigHandler.AddCustomServer4Multiple(_config, lstSelecteds, coreType, out string indexId) != 0)
             {
-                _noticeHandler?.Enqueue(ResUI.OperationFailed);
+                NoticeHandler.Instance.Enqueue(ResUI.OperationFailed);
                 return;
             }
             if (indexId == _config.indexId)
@@ -617,7 +617,7 @@ namespace ServiceLib.ViewModels
             }
 
             ConfigHandler.MoveToGroup(_config, lstSelecteds, SelectedMoveToGroup.id);
-            _noticeHandler?.Enqueue(ResUI.OperationSuccess);
+            NoticeHandler.Instance.Enqueue(ResUI.OperationSuccess);
 
             RefreshServers();
             SelectedMoveToGroup = new();
@@ -629,7 +629,7 @@ namespace ServiceLib.ViewModels
             var item = _lstProfile.FirstOrDefault(t => t.indexId == SelectedProfile.indexId);
             if (item is null)
             {
-                _noticeHandler?.Enqueue(ResUI.PleaseSelectServer);
+                NoticeHandler.Instance.Enqueue(ResUI.PleaseSelectServer);
                 return;
             }
 
@@ -670,7 +670,7 @@ namespace ServiceLib.ViewModels
             var coreHandler = Locator.Current.GetService<CoreHandler>();
             if (coreHandler != null)
             {
-                _speedtestHandler = new SpeedtestHandler(_config, coreHandler, lstSelecteds, actionType, UpdateSpeedtestHandler);
+                _speedtestHandler = new SpeedtestService(_config, coreHandler, lstSelecteds, actionType, UpdateSpeedtestHandler);
             }
         }
 
@@ -684,19 +684,19 @@ namespace ServiceLib.ViewModels
             var item = AppHandler.Instance.GetProfileItem(SelectedProfile.indexId);
             if (item is null)
             {
-                _noticeHandler?.Enqueue(ResUI.PleaseSelectServer);
+                NoticeHandler.Instance.Enqueue(ResUI.PleaseSelectServer);
                 return;
             }
             if (blClipboard)
             {
                 if (CoreConfigHandler.GenerateClientConfig(item, null, out string msg, out string content) != 0)
                 {
-                    Locator.Current.GetService<NoticeHandler>()?.Enqueue(msg);
+                    NoticeHandler.Instance.Enqueue(msg);
                 }
                 else
                 {
                     await _updateView?.Invoke(EViewAction.SetClipboardData, content);
-                    _noticeHandler?.SendMessage(ResUI.OperationSuccess);
+                    NoticeHandler.Instance.SendMessage(ResUI.OperationSuccess);
                 }
             }
             else
@@ -713,12 +713,12 @@ namespace ServiceLib.ViewModels
             }
             if (CoreConfigHandler.GenerateClientConfig(item, fileName, out string msg, out string content) != 0)
             {
-                Locator.Current.GetService<NoticeHandler>()?.Enqueue(msg);
+                NoticeHandler.Instance.Enqueue(msg);
             }
             else
             {
                 msg = string.Format(ResUI.SaveClientConfigurationIn, fileName);
-                Locator.Current.GetService<NoticeHandler>()?.SendMessageAndEnqueue(msg);
+                NoticeHandler.Instance.SendMessageAndEnqueue(msg);
             }
         }
 
@@ -750,7 +750,7 @@ namespace ServiceLib.ViewModels
                 {
                     await _updateView?.Invoke(EViewAction.SetClipboardData, sb.ToString());
                 }
-                _noticeHandler?.SendMessage(ResUI.BatchExportURLSuccessfully);
+                NoticeHandler.Instance.SendMessage(ResUI.BatchExportURLSuccessfully);
             }
         }
 
