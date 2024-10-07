@@ -6,6 +6,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.ReactiveUI;
 using Avalonia.Threading;
+using DialogHostAvalonia;
 using ReactiveUI;
 using Splat;
 using System.ComponentModel;
@@ -19,6 +20,8 @@ namespace v2rayN.Desktop.Views
     {
         private static Config _config;
         private WindowNotificationManager? _manager;
+        private CheckUpdateView? _checkUpdateView;
+        private BackupAndRestoreView? _backupAndRestoreView;
 
         public MainWindow()
         {
@@ -34,8 +37,10 @@ namespace v2rayN.Desktop.Views
             menuSettingsSetUWP.Click += menuSettingsSetUWP_Click;
             menuPromotion.Click += menuPromotion_Click;
             menuClose.Click += menuClose_Click;
+            menuCheckUpdate.Click += MenuCheckUpdate_Click;
+            menuBackupAndRestore.Click += MenuBackupAndRestore_Click;
 
-            var IsAdministrator = true;//WindowsUtils.IsAdministrator();
+            var IsAdministrator = Utils.IsAdministrator();
             MessageBus.Current.Listen<string>(Global.CommandSendSnackMsg).Subscribe(x => DelegateSnackMsg(x));
             ViewModel = new MainWindowViewModel(IsAdministrator, UpdateViewHandler);
             Locator.CurrentMutable.RegisterLazySingleton(() => ViewModel, typeof(MainWindowViewModel));
@@ -114,14 +119,13 @@ namespace v2rayN.Desktop.Views
                 }
             });
 
+            this.Title = $"{Utils.GetVersion()} - {(IsAdministrator ? ResUI.RunAsAdmin : ResUI.NotRunAsAdmin)}";
             if (Utils.IsWindows())
             {
-                this.Title = $"{Utils.GetVersion()} - {(IsAdministrator ? ResUI.RunAsAdmin : ResUI.NotRunAsAdmin)}";
                 menuGlobalHotkeySetting.IsVisible = false;
             }
             else
             {
-                this.Title = $"{Utils.GetVersion()}";
                 menuRebootAsAdmin.IsVisible = false;
                 menuSettingsSetUWP.IsVisible = false;
                 menuGlobalHotkeySetting.IsVisible = false;
@@ -153,7 +157,6 @@ namespace v2rayN.Desktop.Views
                 tabClashConnections2.Content ??= new ClashConnectionsView();
             }
             conTheme.Content ??= new ThemeSettingView();
-            conCheckUpdate.Content ??= new CheckUpdateView();
 
             RestoreUI();
             AddHelpMenuItem();
@@ -365,6 +368,18 @@ namespace v2rayN.Desktop.Views
             //ViewModel?.ScanScreenTaskAsync(result);
         }
 
+        private void MenuCheckUpdate_Click(object? sender, RoutedEventArgs e)
+        {
+            _checkUpdateView ??= new CheckUpdateView();
+            DialogHost.Show(_checkUpdateView);
+        }
+
+        private void MenuBackupAndRestore_Click(object? sender, RoutedEventArgs e)
+        {
+            _backupAndRestoreView ??= new BackupAndRestoreView(this);
+            DialogHost.Show(_backupAndRestoreView);
+        }
+
         #endregion Event
 
         #region UI
@@ -435,8 +450,6 @@ namespace v2rayN.Desktop.Views
             var coreInfo = CoreInfoHandler.Instance.GetCoreInfo();
             foreach (var it in coreInfo
                 .Where(t => t.coreType != ECoreType.v2fly
-                            && t.coreType != ECoreType.clash
-                            && t.coreType != ECoreType.clash_meta
                             && t.coreType != ECoreType.hysteria))
             {
                 var item = new MenuItem()

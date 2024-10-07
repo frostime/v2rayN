@@ -109,7 +109,8 @@ namespace ServiceLib.Handler
                 _updateFunc(false, args.Msg);
 
                 url = args.Url;
-                fileName = Utils.GetTempPath(Utils.GetGUID());
+                var ext = Path.GetExtension(url);
+                fileName = Utils.GetTempPath(Utils.GetGUID()+ ext);
                 await downloadHandle.DownloadFileAsync(url, fileName, true, _timeout);
             }
             else
@@ -322,9 +323,9 @@ namespace ServiceLib.Handler
                 }
 
                 using Process p = new();
-                p.StartInfo.FileName = filePath.AppendQuotes();
+                p.StartInfo.FileName = filePath;
                 p.StartInfo.Arguments = coreInfo.versionArg;
-                p.StartInfo.WorkingDirectory = Utils.StartupPath();
+                p.StartInfo.WorkingDirectory = Utils.GetConfigPath();
                 p.StartInfo.UseShellExecute = false;
                 p.StartInfo.RedirectStandardOutput = true;
                 p.StartInfo.CreateNoWindow = true;
@@ -336,14 +337,11 @@ namespace ServiceLib.Handler
                 switch (type)
                 {
                     case ECoreType.v2fly:
-                    case ECoreType.SagerNet:
                     case ECoreType.Xray:
                     case ECoreType.v2fly_v5:
                         version = Regex.Match(echo, $"{coreInfo.match} ([0-9.]+) \\(").Groups[1].Value;
                         break;
 
-                    case ECoreType.clash:
-                    case ECoreType.clash_meta:
                     case ECoreType.mihomo:
                         version = Regex.Match(echo, $"v[0-9.]+").Groups[0].Value;
                         break;
@@ -378,7 +376,6 @@ namespace ServiceLib.Handler
                 switch (type)
                 {
                     case ECoreType.v2fly:
-                    case ECoreType.SagerNet:
                     case ECoreType.Xray:
                     case ECoreType.v2fly_v5:
                         {
@@ -387,8 +384,6 @@ namespace ServiceLib.Handler
                             url = string.Format(GetUrlFromCore(coreInfo), version.ToVersionString("v"));
                             break;
                         }
-                    case ECoreType.clash:
-                    case ECoreType.clash_meta:
                     case ECoreType.mihomo:
                         {
                             curVersion = GetCoreVersion(type);

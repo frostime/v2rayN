@@ -10,12 +10,17 @@
     d:DesignWidth="800"
     x:DataType="vms:ThemeSettingViewModel"
     mc:Ignorable="d">
-    <Button Width="30" Height="30">
+    <Button
+        Width="30"
+        Height="30"
+        Margin="10,0"
+        Theme="{DynamicResource BorderlessButton}">
         <Button.Content>
-            <Image
+            <PathIcon
                 Width="20"
                 Height="20"
-                Source="/Assets/more.png" />
+                Data="{StaticResource building_more}"
+                Foreground="{DynamicResource ButtonDefaultTertiaryForeground}" />
         </Button.Content>
         <Button.Flyout>
             <Flyout>

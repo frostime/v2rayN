@@ -673,7 +673,7 @@ namespace ServiceLib.Resx {
         }
         
         /// <summary>
-        ///   查找类似 Importing Share Links from clipboard (Ctrl+V) 的本地化字符串。
+        ///   查找类似 Import Share Links from clipboard (Ctrl+V) 的本地化字符串。
         /// </summary>
         public static string menuAddServerViaClipboard {
             get {
@@ -1474,6 +1474,15 @@ namespace ServiceLib.Resx {
         }
         
         /// <summary>
+        ///   查找类似 Save Interface Layout 的本地化字符串。
+        /// </summary>
+        public static string menuStorageUI {
+            get {
+                return ResourceManager.GetString("menuStorageUI", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Add 的本地化字符串。
         /// </summary>
         public static string menuSubAdd {
@@ -1717,7 +1726,7 @@ namespace ServiceLib.Resx {
         }
         
         /// <summary>
-        ///   查找类似 Servers Filter, press Enter to execute 的本地化字符串。
+        ///   查找类似 Server filter, press Enter to execute 的本地化字符串。
         /// </summary>
         public static string MsgServerTitle {
             get {
@@ -3478,6 +3487,15 @@ namespace ServiceLib.Resx {
         public static string TestMeOutput {
             get {
                 return ResourceManager.GetString("TestMeOutput", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Active 的本地化字符串。
+        /// </summary>
+        public static string TipActiveServer {
+            get {
+                return ResourceManager.GetString("TipActiveServer", resourceCulture);
             }
         }
         
