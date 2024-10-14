@@ -34,9 +34,9 @@ namespace ServiceLib.ViewModels
             }
             CoreType = SelectedSource?.coreType?.ToString();
 
-            SaveCmd = ReactiveCommand.Create(() =>
+            SaveCmd = ReactiveCommand.CreateFromTask(async () =>
             {
-                SaveServerAsync();
+                await SaveServerAsync();
             });
         }
 
@@ -87,7 +87,7 @@ namespace ServiceLib.ViewModels
             if (ConfigHandler.AddServer(_config, SelectedSource) == 0)
             {
                 NoticeHandler.Instance.Enqueue(ResUI.OperationSuccess);
-                await _updateView?.Invoke(EViewAction.CloseWindow, null);
+                _updateView?.Invoke(EViewAction.CloseWindow, null);
             }
             else
             {

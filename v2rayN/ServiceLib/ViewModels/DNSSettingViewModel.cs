@@ -38,17 +38,17 @@ namespace ServiceLib.ViewModels
             normalDNS2 = item2?.normalDNS ?? string.Empty;
             tunDNS2 = item2?.tunDNS ?? string.Empty;
 
-            SaveCmd = ReactiveCommand.Create(() =>
+            SaveCmd = ReactiveCommand.CreateFromTask(async () =>
             {
-                SaveSettingAsync();
+                await SaveSettingAsync();
             });
 
-            ImportDefConfig4V2rayCmd = ReactiveCommand.Create(() =>
+            ImportDefConfig4V2rayCmd = ReactiveCommand.CreateFromTask(async () =>
             {
                 normalDNS = Utils.GetEmbedText(Global.DNSV2rayNormalFileName);
             });
 
-            ImportDefConfig4SingboxCmd = ReactiveCommand.Create(() =>
+            ImportDefConfig4SingboxCmd = ReactiveCommand.CreateFromTask(async () =>
             {
                 normalDNS2 = Utils.GetEmbedText(Global.DNSSingboxNormalFileName);
                 tunDNS2 = Utils.GetEmbedText(Global.TunSingboxDNSFileName);
@@ -65,7 +65,7 @@ namespace ServiceLib.ViewModels
                 }
                 else
                 {
-                    if (normalDNS.Contains("{") || normalDNS.Contains("}"))
+                    if (normalDNS.Contains('{') || normalDNS.Contains('}'))
                     {
                         NoticeHandler.Instance.Enqueue(ResUI.FillCorrectDNSText);
                         return;
@@ -106,7 +106,7 @@ namespace ServiceLib.ViewModels
             ConfigHandler.SaveDNSItems(_config, item2);
 
             NoticeHandler.Instance.Enqueue(ResUI.OperationSuccess);
-            await _updateView?.Invoke(EViewAction.CloseWindow, null);
+            _updateView?.Invoke(EViewAction.CloseWindow, null);
         }
     }
 }

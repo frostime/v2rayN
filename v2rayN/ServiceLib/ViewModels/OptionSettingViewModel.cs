@@ -187,9 +187,9 @@ namespace ServiceLib.ViewModels
 
             InitCoreType();
 
-            SaveCmd = ReactiveCommand.Create(() =>
+            SaveCmd = ReactiveCommand.CreateFromTask(async () =>
             {
-                SaveSettingAsync();
+                await SaveSettingAsync();
             });
         }
 
@@ -342,7 +342,7 @@ namespace ServiceLib.ViewModels
                 {
                     NoticeHandler.Instance.Enqueue(ResUI.OperationSuccess);
                 }
-                await _updateView?.Invoke(EViewAction.CloseWindow, null);
+                _updateView?.Invoke(EViewAction.CloseWindow, null);
             }
             else
             {

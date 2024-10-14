@@ -3,31 +3,22 @@ using System.IO.Compression;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace v2rayUpgrade
+namespace AmazTool
 {
-    internal static class Program
+    internal class UpgradeApp
     {
-        private static readonly string defaultFilename = "v2rayN.zip_temp";
-        private static string? fileName;
-
-        /// <summary>
-        /// 应用程序的主入口点。
-        /// </summary>
-        [STAThread]
-        private static void Main(string[] args)
+        public static void Upgrade(string fileName)
         {
-            if (args.Length > 0)
-            {
-                fileName = Uri.UnescapeDataString(string.Join(" ", args));
-            }
-            else
-            {
-                fileName = defaultFilename;
-            }
             Console.WriteLine(fileName);
             Console.WriteLine("In progress, please wait...(正在进行中，请等待)");
 
             Thread.Sleep(5000);
+
+            if (!File.Exists(fileName))
+            {
+                Console.WriteLine("Upgrade Failed, File Not Exist(升级失败,文件不存在).");
+                return;
+            }
 
             try
             {
@@ -47,19 +38,6 @@ namespace v2rayUpgrade
                 // Access may be denied without admin right. The user may not be an administrator.
                 Console.WriteLine("Failed to close v2rayN(关闭v2rayN失败).\n" +
                     "Close it manually, or the upgrade may fail.(请手动关闭正在运行的v2rayN，否则可能升级失败。\n\n" + ex.StackTrace);
-            }
-
-            if (!File.Exists(fileName))
-            {
-                if (File.Exists(defaultFilename))
-                {
-                    fileName = defaultFilename;
-                }
-                else
-                {
-                    Console.WriteLine("Upgrade Failed, File Not Exist(升级失败,文件不存在).");
-                    return;
-                }
             }
 
             StringBuilder sb = new();
@@ -125,17 +103,17 @@ namespace v2rayUpgrade
             process.Start();
         }
 
-        public static string GetExePath()
+        private static string GetExePath()
         {
-            return Environment.ProcessPath ?? string.Empty;
+            return Environment.ProcessPath ?? Process.GetCurrentProcess().MainModule?.FileName ?? string.Empty;
         }
 
-        public static string StartupPath()
+        private static string StartupPath()
         {
             return AppDomain.CurrentDomain.BaseDirectory;
         }
 
-        public static string GetPath(string fileName)
+        private static string GetPath(string fileName)
         {
             string startupPath = StartupPath();
             if (string.IsNullOrEmpty(fileName))

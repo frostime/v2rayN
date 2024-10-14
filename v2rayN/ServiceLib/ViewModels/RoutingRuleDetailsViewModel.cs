@@ -48,9 +48,9 @@ namespace ServiceLib.ViewModels
             IP = Utils.List2String(SelectedSource.ip, true);
             Process = Utils.List2String(SelectedSource.process, true);
 
-            SaveCmd = ReactiveCommand.Create(() =>
+            SaveCmd = ReactiveCommand.CreateFromTask(async () =>
             {
-                SaveRulesAsync();
+                await SaveRulesAsync();
             });
         }
 
@@ -87,7 +87,7 @@ namespace ServiceLib.ViewModels
                 return;
             }
             //NoticeHandler.Instance.Enqueue(ResUI.OperationSuccess);
-            await _updateView?.Invoke(EViewAction.CloseWindow, null);
+            _updateView?.Invoke(EViewAction.CloseWindow, null);
         }
     }
 }
