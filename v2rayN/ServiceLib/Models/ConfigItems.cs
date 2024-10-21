@@ -141,6 +141,8 @@
         public string defIEProxyExceptions { get; set; }
         public string subConvertUrl { get; set; } = string.Empty;
         public string? geoSourceUrl { get; set; }
+        public string? srsSourceUrl { get; set; }
+        public string? routeRulesTemplateSourceUrl { get; set; }
     }
 
     [Serializable]

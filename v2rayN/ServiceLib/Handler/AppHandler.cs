@@ -44,13 +44,10 @@
 
         #region Init
 
-        public AppHandler()
-        {
-        }
-
         public bool InitApp()
         {
-            if (ConfigHandler.LoadConfig(ref _config) != 0)
+            _config = ConfigHandler.LoadConfig();
+            if (_config == null)
             {
                 return false;
             }
@@ -61,6 +58,13 @@
             {
                 Environment.SetEnvironmentVariable("DOTNET_EnableWriteXorExecute", "0", EnvironmentVariableTarget.User);
             }
+
+            SQLiteHelper.Instance.CreateTable<SubItem>();
+            SQLiteHelper.Instance.CreateTable<ProfileItem>();
+            SQLiteHelper.Instance.CreateTable<ServerStatItem>();
+            SQLiteHelper.Instance.CreateTable<RoutingItem>();
+            SQLiteHelper.Instance.CreateTable<ProfileExItem>();
+            SQLiteHelper.Instance.CreateTable<DNSItem>();
             return true;
         }
 
@@ -71,13 +75,6 @@
             Logging.SaveLog($"v2rayN start up | {Utils.GetVersion()} | {Utils.GetExePath()}");
             Logging.SaveLog($"{Environment.OSVersion} - {(Environment.Is64BitOperatingSystem ? 64 : 32)}");
             Logging.ClearLogs();
-
-            SQLiteHelper.Instance.CreateTable<SubItem>();
-            SQLiteHelper.Instance.CreateTable<ProfileItem>();
-            SQLiteHelper.Instance.CreateTable<ServerStatItem>();
-            SQLiteHelper.Instance.CreateTable<RoutingItem>();
-            SQLiteHelper.Instance.CreateTable<ProfileExItem>();
-            SQLiteHelper.Instance.CreateTable<DNSItem>();
 
             return true;
         }
@@ -156,7 +153,7 @@
                 {
                     filter = filter.Replace("'", "");
                 }
-                sql += String.Format(" and (a.remarks like '%{0}%' or a.address like '%{0}%') ", filter);
+                sql += string.Format(" and (a.remarks like '%{0}%' or a.address like '%{0}%') ", filter);
             }
 
             return SQLiteHelper.Instance.Query<ProfileItemModel>(sql).ToList();

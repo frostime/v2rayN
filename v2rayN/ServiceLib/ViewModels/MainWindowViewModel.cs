@@ -25,6 +25,7 @@ namespace ServiceLib.ViewModels
         public ReactiveCommand<Unit, Unit> AddCustomServerCmd { get; }
         public ReactiveCommand<Unit, Unit> AddServerViaClipboardCmd { get; }
         public ReactiveCommand<Unit, Unit> AddServerViaScanCmd { get; }
+        public ReactiveCommand<Unit, Unit> AddServerViaImageCmd { get; }
 
         //Subscription
         public ReactiveCommand<Unit, Unit> SubSettingCmd { get; }
@@ -43,6 +44,11 @@ namespace ServiceLib.ViewModels
         public ReactiveCommand<Unit, Unit> RebootAsAdminCmd { get; }
         public ReactiveCommand<Unit, Unit> ClearServerStatisticsCmd { get; }
         public ReactiveCommand<Unit, Unit> OpenTheFileLocationCmd { get; }
+
+        //Presets
+        public ReactiveCommand<Unit, Unit> RegionalPresetDefaultCmd { get; }
+
+        public ReactiveCommand<Unit, Unit> RegionalPresetRussiaCmd { get; }
 
         public ReactiveCommand<Unit, Unit> ReloadCmd { get; }
 
@@ -117,7 +123,11 @@ namespace ServiceLib.ViewModels
             });
             AddServerViaScanCmd = ReactiveCommand.CreateFromTask(async () =>
             {
-                await AddServerViaScanTaskAsync();
+                await AddServerViaScanAsync();
+            });
+            AddServerViaImageCmd = ReactiveCommand.CreateFromTask(async () =>
+            {
+                await AddServerViaImageAsync();
             });
 
             //Subscription
@@ -179,6 +189,16 @@ namespace ServiceLib.ViewModels
             ReloadCmd = ReactiveCommand.CreateFromTask(async () =>
             {
                 await Reload();
+            });
+
+            RegionalPresetDefaultCmd = ReactiveCommand.CreateFromTask(async () =>
+            {
+                await ApplyRegionalPreset(EPresetType.Default);
+            });
+
+            RegionalPresetRussiaCmd = ReactiveCommand.CreateFromTask(async () =>
+            {
+                await ApplyRegionalPreset(EPresetType.Russia);
             });
 
             #endregion WhenAnyValue && ReactiveCommand
@@ -263,11 +283,11 @@ namespace ServiceLib.ViewModels
             {
                 Logging.SaveLog("MyAppExit Begin");
                 //if (blWindowsShutDown)
-                await _updateView?.Invoke(EViewAction.UpdateSysProxy, true);
+                await SysProxyHandler.UpdateSysProxy(_config, true);
 
                 ConfigHandler.SaveConfig(_config);
-                ProfileExHandler.Instance.SaveTo();
-                StatisticsHandler.Instance.SaveTo();
+                await ProfileExHandler.Instance.SaveTo();
+                await StatisticsHandler.Instance.SaveTo();
                 StatisticsHandler.Instance.Close();
                 CoreHandler.Instance.CoreStop();
 
@@ -280,14 +300,21 @@ namespace ServiceLib.ViewModels
             }
         }
 
-        public async Task UpgradeApp(string fileName)
+        public async Task UpgradeApp(string arg)
         {
+            if (!Utils.UpgradeAppExists(out var fileName))
+            {
+                NoticeHandler.Instance.SendMessageAndEnqueue(ResUI.UpgradeAppNotExistTip);
+                Logging.SaveLog("UpgradeApp does not exist");
+                return;
+            }
+
             Process process = new()
             {
                 StartInfo = new ProcessStartInfo
                 {
-                    FileName = "AmazTool",
-                    Arguments = fileName.AppendQuotes(),
+                    FileName = fileName,
+                    Arguments = arg.AppendQuotes(),
                     WorkingDirectory = Utils.StartupPath()
                 }
             };
@@ -356,7 +383,7 @@ namespace ServiceLib.ViewModels
                 await _updateView?.Invoke(EViewAction.AddServerViaClipboard, null);
                 return;
             }
-            int ret = ConfigHandler.AddBatchServers(_config, clipboardData, _config.subIndexId, false);
+            int ret = await ConfigHandler.AddBatchServers(_config, clipboardData, _config.subIndexId, false);
             if (ret > 0)
             {
                 RefreshSubscriptions();
@@ -365,12 +392,34 @@ namespace ServiceLib.ViewModels
             }
         }
 
-        public async Task AddServerViaScanTaskAsync()
+        public async Task AddServerViaScanAsync()
         {
             _updateView?.Invoke(EViewAction.ScanScreenTask, null);
         }
 
-        public void ScanScreenResult(string result)
+        public async Task ScanScreenResult(byte[]? bytes)
+        {
+            var result = QRCodeHelper.ParseBarcode(bytes);
+            await AddScanResultAsync(result);
+        }
+
+        public async Task AddServerViaImageAsync()
+        {
+            _updateView?.Invoke(EViewAction.ScanImageTask, null);
+        }
+
+        public async Task ScanImageResult(string fileName)
+        {
+            if (Utils.IsNullOrEmpty(fileName))
+            {
+                return;
+            }
+
+            var result = QRCodeHelper.ParseBarcode(fileName);
+            await AddScanResultAsync(result);
+        }
+
+        private async Task AddScanResultAsync(string? result)
         {
             if (Utils.IsNullOrEmpty(result))
             {
@@ -378,7 +427,7 @@ namespace ServiceLib.ViewModels
             }
             else
             {
-                int ret = ConfigHandler.AddBatchServers(_config, result, _config.subIndexId, false);
+                int ret = await ConfigHandler.AddBatchServers(_config, result, _config.subIndexId, false);
                 if (ret > 0)
                 {
                     RefreshSubscriptions();
@@ -402,7 +451,7 @@ namespace ServiceLib.ViewModels
 
         public async Task UpdateSubscriptionProcess(string subId, bool blProxy)
         {
-            (new UpdateService()).UpdateSubscriptionProcess(_config, subId, blProxy, UpdateTaskHandler);
+            await (new UpdateService()).UpdateSubscriptionProcess(_config, subId, blProxy, UpdateTaskHandler);
         }
 
         #endregion Subscription
@@ -485,12 +534,13 @@ namespace ServiceLib.ViewModels
 
             await LoadCore();
             Locator.Current.GetService<StatusBarViewModel>()?.TestServerAvailability();
+            await SysProxyHandler.UpdateSysProxy(_config, false);
             _updateView?.Invoke(EViewAction.DispatcherReload, null);
         }
 
         public void ReloadResult()
         {
-            //ChangeSystemProxyStatusAsync(_config.systemProxyItem.sysProxyType, false);
+            //Locator.Current.GetService<StatusBarViewModel>()?.ChangeSystemProxyAsync(_config.systemProxyItem.sysProxyType, false);
             BlReloadEnabled = true;
             ShowClashUI = _config.IsRunningCore(ECoreType.sing_box);
             if (ShowClashUI)
@@ -502,7 +552,7 @@ namespace ServiceLib.ViewModels
 
         private async Task LoadCore()
         {
-            await Task.Run(() =>
+            await Task.Run(async () =>
             {
                 //if (_config.tunModeItem.enableTun)
                 //{
@@ -510,7 +560,7 @@ namespace ServiceLib.ViewModels
                 //    WindowsUtils.RemoveTunDevice();
                 //}
 
-                var node = ConfigHandler.GetDefaultServer(_config);
+                var node = await ConfigHandler.GetDefaultServer(_config);
                 CoreHandler.Instance.LoadCore(node);
             });
         }
@@ -535,5 +585,20 @@ namespace ServiceLib.ViewModels
         }
 
         #endregion core job
+
+        #region Presets
+
+        public async Task ApplyRegionalPreset(EPresetType type)
+        {
+            await ConfigHandler.ApplyRegionalPreset(_config, type);
+            ConfigHandler.InitRouting(_config);
+            Locator.Current.GetService<StatusBarViewModel>()?.RefreshRoutingsMenu();
+
+            ConfigHandler.SaveConfig(_config, false);
+            await new UpdateService().UpdateGeoFileAll(_config, UpdateHandler);
+            Reload();
+        }
+
+        #endregion Presets
     }
 }

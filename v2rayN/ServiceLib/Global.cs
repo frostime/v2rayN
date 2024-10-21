@@ -115,8 +115,23 @@
         };
 
         public static readonly List<string> GeoFilesSources = new() {
-            GeoUrl,
+            "",
             @"https://github.com/runetfreedom/russia-v2ray-rules-dat/releases/latest/download/{0}.dat",
+        };
+
+        public static readonly List<string> SingboxRulesetSources = new() {
+            "",
+            @"https://cdn.jsdelivr.net/gh/runetfreedom/russia-v2ray-rules-dat@release/sing-box/rule-set-{0}/{1}.srs",
+        };
+
+        public static readonly List<string> RoutingRulesSources = new() {
+            "",
+            @"https://cdn.jsdelivr.net/gh/runetfreedom/russia-v2ray-custom-routing-list@main/template.json",
+        };
+
+        public static readonly List<string> DNSTemplateSources = new() {
+            "",
+            @"https://cdn.jsdelivr.net/gh/runetfreedom/russia-v2ray-custom-routing-list@main/",
         };
 
         public static readonly Dictionary<string, string> UserAgentTexts = new()

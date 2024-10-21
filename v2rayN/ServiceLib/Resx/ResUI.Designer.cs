@@ -682,6 +682,15 @@ namespace ServiceLib.Resx {
         }
         
         /// <summary>
+        ///   查找类似 Scan QR code in the image 的本地化字符串。
+        /// </summary>
+        public static string menuAddServerViaImage {
+            get {
+                return ResourceManager.GetString("menuAddServerViaImage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Scan QR code on the screen (Ctrl+S) 的本地化字符串。
         /// </summary>
         public static string menuAddServerViaScan {
@@ -1182,6 +1191,33 @@ namespace ServiceLib.Resx {
         public static string menuRebootAsAdmin {
             get {
                 return ResourceManager.GetString("menuRebootAsAdmin", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Regional presets setting 的本地化字符串。
+        /// </summary>
+        public static string menuRegionalPresets {
+            get {
+                return ResourceManager.GetString("menuRegionalPresets", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Default 的本地化字符串。
+        /// </summary>
+        public static string menuRegionalPresetsDefault {
+            get {
+                return ResourceManager.GetString("menuRegionalPresetsDefault", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Russia 的本地化字符串。
+        /// </summary>
+        public static string menuRegionalPresetsRussia {
+            get {
+                return ResourceManager.GetString("menuRegionalPresetsRussia", resourceCulture);
             }
         }
         
@@ -2726,6 +2762,15 @@ namespace ServiceLib.Resx {
         }
         
         /// <summary>
+        ///   查找类似 Users in China region can ignore this item 的本地化字符串。
+        /// </summary>
+        public static string TbSettingsChinaUserTip {
+            get {
+                return ResourceManager.GetString("TbSettingsChinaUserTip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Color 的本地化字符串。
         /// </summary>
         public static string TbSettingsColor {
@@ -3167,6 +3212,15 @@ namespace ServiceLib.Resx {
         }
         
         /// <summary>
+        ///   查找类似 Routing rules source (optional) 的本地化字符串。
+        /// </summary>
+        public static string TbSettingsRoutingRulesSource {
+            get {
+                return ResourceManager.GetString("TbSettingsRoutingRulesSource", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Set Win10 UWP Loopback 的本地化字符串。
         /// </summary>
         public static string TbSettingsSetUWP {
@@ -3226,6 +3280,15 @@ namespace ServiceLib.Resx {
         public static string TbSettingsSpeedTestUrl {
             get {
                 return ResourceManager.GetString("TbSettingsSpeedTestUrl", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 sing-box ruleset files source (optional) 的本地化字符串。
+        /// </summary>
+        public static string TbSettingsSrsFilesSource {
+            get {
+                return ResourceManager.GetString("TbSettingsSrsFilesSource", resourceCulture);
             }
         }
         
@@ -3694,6 +3757,15 @@ namespace ServiceLib.Resx {
         public static string UpdateStandalonePackageTip {
             get {
                 return ResourceManager.GetString("UpdateStandalonePackageTip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 UpgradeApp does not exist 的本地化字符串。
+        /// </summary>
+        public static string UpgradeAppNotExistTip {
+            get {
+                return ResourceManager.GetString("UpgradeAppNotExistTip", resourceCulture);
             }
         }
     }

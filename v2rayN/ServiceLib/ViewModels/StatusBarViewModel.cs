@@ -3,7 +3,6 @@ using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 using Splat;
 using System.Reactive;
-using System.Reactive.Linq;
 using System.Text;
 
 namespace ServiceLib.ViewModels
@@ -34,7 +33,6 @@ namespace ServiceLib.ViewModels
         public ReactiveCommand<Unit, Unit> SubUpdateCmd { get; }
         public ReactiveCommand<Unit, Unit> SubUpdateViaProxyCmd { get; }
         public ReactiveCommand<Unit, Unit> NotifyLeftClickCmd { get; }
-        public ReactiveCommand<Unit, Unit> ExitCmd { get; }
 
         #region System Proxy
 
@@ -213,7 +211,7 @@ namespace ServiceLib.ViewModels
         private async Task AddServerViaScan()
         {
             var service = Locator.Current.GetService<MainWindowViewModel>();
-            if (service != null) await service.AddServerViaScanTaskAsync();
+            if (service != null) await service.AddServerViaScanAsync();
         }
 
         private async Task UpdateSubscriptionProcess(bool blProxy)
@@ -222,12 +220,12 @@ namespace ServiceLib.ViewModels
             if (service != null) await service.UpdateSubscriptionProcess("", blProxy);
         }
 
-        public void RefreshServersBiz()
+        public async Task RefreshServersBiz()
         {
             RefreshServersMenu();
 
             //display running server
-            var running = ConfigHandler.GetDefaultServer(_config);
+            var running = await ConfigHandler.GetDefaultServer(_config);
             if (running != null)
             {
                 RunningServerDisplay =
@@ -285,7 +283,7 @@ namespace ServiceLib.ViewModels
 
         public async Task TestServerAvailability()
         {
-            var item = ConfigHandler.GetDefaultServer(_config);
+            var item = await ConfigHandler.GetDefaultServer(_config);
             if (item == null)
             {
                 return;
@@ -318,10 +316,9 @@ namespace ServiceLib.ViewModels
             ConfigHandler.SaveConfig(_config, false);
         }
 
-        private async Task ChangeSystemProxyAsync(ESysProxyType type, bool blChange)
+        public async Task ChangeSystemProxyAsync(ESysProxyType type, bool blChange)
         {
-            //await _updateView?.Invoke(EViewAction.UpdateSysProxy, _config.tunModeItem.enableTun ? true : false);
-            _updateView?.Invoke(EViewAction.UpdateSysProxy, false);
+            await SysProxyHandler.UpdateSysProxy(_config, false);
 
             BlSystemProxyClear = (type == ESysProxyType.ForcedClear);
             BlSystemProxySet = (type == ESysProxyType.ForcedChange);
@@ -382,7 +379,7 @@ namespace ServiceLib.ViewModels
                 return;
             }
 
-            if (ConfigHandler.SetDefaultRouting(_config, item) == 0)
+            if (await ConfigHandler.SetDefaultRouting(_config, item) == 0)
             {
                 NoticeHandler.Instance.SendMessageEx(ResUI.TipChangeRouting);
                 Locator.Current.GetService<MainWindowViewModel>()?.Reload();

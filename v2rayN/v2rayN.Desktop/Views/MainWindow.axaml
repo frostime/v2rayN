@@ -32,10 +32,8 @@
                             </StackPanel>
                         </MenuItem.Header>
                         <MenuItem x:Name="menuAddServerViaClipboard" Header="{x:Static resx:ResUI.menuAddServerViaClipboard}" />
-                        <MenuItem
-                            x:Name="menuAddServerViaScan"
-                            Header="{x:Static resx:ResUI.menuAddServerViaScan}"
-                            IsVisible="False" />
+                        <MenuItem x:Name="menuAddServerViaScan" Header="{x:Static resx:ResUI.menuAddServerViaScan}" />
+                        <MenuItem x:Name="menuAddServerViaImage" Header="{x:Static resx:ResUI.menuAddServerViaImage}" />
                         <MenuItem x:Name="menuAddCustomServer" Header="{x:Static resx:ResUI.menuAddCustomServer}" />
                         <Separator />
                         <MenuItem x:Name="menuAddVmessServer" Header="{x:Static resx:ResUI.menuAddVmessServer}" />
@@ -79,6 +77,10 @@
                         <MenuItem x:Name="menuSettingsSetUWP" Header="{x:Static resx:ResUI.TbSettingsSetUWP}" />
                         <MenuItem x:Name="menuClearServerStatistics" Header="{x:Static resx:ResUI.menuClearServerStatistics}" />
                         <Separator />
+                        <MenuItem Header="{x:Static resx:ResUI.menuRegionalPresets}">
+                            <MenuItem x:Name="menuRegionalPresetsDefault" Header="{x:Static resx:ResUI.menuRegionalPresetsDefault}" />
+                            <MenuItem x:Name="menuRegionalPresetsRussia" Header="{x:Static resx:ResUI.menuRegionalPresetsRussia}" />
+                        </MenuItem>
                         <MenuItem x:Name="menuBackupAndRestore" Header="{x:Static resx:ResUI.menuBackupAndRestore}" />
                         <MenuItem x:Name="menuOpenTheFileLocation" Header="{x:Static resx:ResUI.menuOpenTheFileLocation}" />
                     </MenuItem>

@@ -1330,4 +1330,28 @@
   <data name="TbSettingsGeoFilesSource" xml:space="preserve">
     <value>Geo files source (optional)</value>
   </data>
+  <data name="TbSettingsSrsFilesSource" xml:space="preserve">
+    <value>sing-box ruleset files source (optional)</value>
+  </data>
+  <data name="UpgradeAppNotExistTip" xml:space="preserve">
+    <value>UpgradeApp does not exist</value>
+  </data>
+  <data name="TbSettingsRoutingRulesSource" xml:space="preserve">
+    <value>Routing rules source (optional)</value>
+  </data>
+  <data name="menuRegionalPresets" xml:space="preserve">
+    <value>Regional presets setting</value>
+  </data>
+  <data name="menuRegionalPresetsDefault" xml:space="preserve">
+    <value>Default</value>
+  </data>
+  <data name="menuRegionalPresetsRussia" xml:space="preserve">
+    <value>Russia</value>
+  </data>
+  <data name="TbSettingsChinaUserTip" xml:space="preserve">
+    <value>Users in China region can ignore this item</value>
+  </data>
+  <data name="menuAddServerViaImage" xml:space="preserve">
+    <value>Scan QR code in the image</value>
+  </data>
 </root>

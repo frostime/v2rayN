@@ -107,7 +107,7 @@ namespace ServiceLib.Services
                 _updateFunc?.Invoke(false, args.Msg);
 
                 url = args.Url;
-                var ext = Path.GetExtension(url);
+                var ext = url.Contains(".tar.gz") ? ".tar.gz" : Path.GetExtension(url);
                 fileName = Utils.GetTempPath(Utils.GetGuid() + ext);
                 await downloadHandle.DownloadFileAsync(url, fileName, true, _timeout);
             }
@@ -120,7 +120,7 @@ namespace ServiceLib.Services
             }
         }
 
-        public void UpdateSubscriptionProcess(Config config, string subId, bool blProxy, Action<bool, string> updateFunc)
+        public async Task UpdateSubscriptionProcess(Config config, string subId, bool blProxy, Action<bool, string> updateFunc)
         {
             _config = config;
             _updateFunc = updateFunc;
@@ -134,129 +134,127 @@ namespace ServiceLib.Services
                 return;
             }
 
-            Task.Run(async () =>
+            foreach (var item in subItem)
             {
-                foreach (var item in subItem)
+                string id = item.id.TrimEx();
+                string url = item.url.TrimEx();
+                string userAgent = item.userAgent.TrimEx();
+                string hashCode = $"{item.remarks}->";
+                if (Utils.IsNullOrEmpty(id) || Utils.IsNullOrEmpty(url) || Utils.IsNotEmpty(subId) && item.id != subId)
                 {
-                    string id = item.id.TrimEx();
-                    string url = item.url.TrimEx();
-                    string userAgent = item.userAgent.TrimEx();
-                    string hashCode = $"{item.remarks}->";
-                    if (Utils.IsNullOrEmpty(id) || Utils.IsNullOrEmpty(url) || Utils.IsNotEmpty(subId) && item.id != subId)
-                    {
-                        //_updateFunc?.Invoke(false, $"{hashCode}{ResUI.MsgNoValidSubscription}");
-                        continue;
-                    }
-                    if (!url.StartsWith(Global.HttpsProtocol) && !url.StartsWith(Global.HttpProtocol))
-                    {
-                        continue;
-                    }
-                    if (item.enabled == false)
-                    {
-                        _updateFunc?.Invoke(false, $"{hashCode}{ResUI.MsgSkipSubscriptionUpdate}");
-                        continue;
-                    }
-
-                    var downloadHandle = new DownloadService();
-                    downloadHandle.Error += (sender2, args) =>
-                    {
-                        _updateFunc?.Invoke(false, $"{hashCode}{args.GetException().Message}");
-                    };
-
-                    _updateFunc?.Invoke(false, $"{hashCode}{ResUI.MsgStartGettingSubscriptions}");
-
-                    //one url
-                    url = Utils.GetPunycode(url);
-                    //convert
-                    if (Utils.IsNotEmpty(item.convertTarget))
-                    {
-                        var subConvertUrl = Utils.IsNullOrEmpty(config.constItem.subConvertUrl) ? Global.SubConvertUrls.FirstOrDefault() : config.constItem.subConvertUrl;
-                        url = string.Format(subConvertUrl!, Utils.UrlEncode(url));
-                        if (!url.Contains("target="))
-                        {
-                            url += string.Format("&target={0}", item.convertTarget);
-                        }
-                        if (!url.Contains("config="))
-                        {
-                            url += string.Format("&config={0}", Global.SubConvertConfig.FirstOrDefault());
-                        }
-                    }
-                    var result = await downloadHandle.TryDownloadString(url, blProxy, userAgent);
-                    if (blProxy && Utils.IsNullOrEmpty(result))
-                    {
-                        result = await downloadHandle.TryDownloadString(url, false, userAgent);
-                    }
-
-                    //more url
-                    if (Utils.IsNullOrEmpty(item.convertTarget) && Utils.IsNotEmpty(item.moreUrl.TrimEx()))
-                    {
-                        if (Utils.IsNotEmpty(result) && Utils.IsBase64String(result))
-                        {
-                            result = Utils.Base64Decode(result);
-                        }
-
-                        var lstUrl = item.moreUrl.TrimEx().Split(",") ?? [];
-                        foreach (var it in lstUrl)
-                        {
-                            var url2 = Utils.GetPunycode(it);
-                            if (Utils.IsNullOrEmpty(url2))
-                            {
-                                continue;
-                            }
-
-                            var result2 = await downloadHandle.TryDownloadString(url2, blProxy, userAgent);
-                            if (blProxy && Utils.IsNullOrEmpty(result2))
-                            {
-                                result2 = await downloadHandle.TryDownloadString(url2, false, userAgent);
-                            }
-                            if (Utils.IsNotEmpty(result2))
-                            {
-                                if (Utils.IsBase64String(result2))
-                                {
-                                    result += Utils.Base64Decode(result2);
-                                }
-                                else
-                                {
-                                    result += result2;
-                                }
-                            }
-                        }
-                    }
-
-                    if (Utils.IsNullOrEmpty(result))
-                    {
-                        _updateFunc?.Invoke(false, $"{hashCode}{ResUI.MsgSubscriptionDecodingFailed}");
-                    }
-                    else
-                    {
-                        _updateFunc?.Invoke(false, $"{hashCode}{ResUI.MsgGetSubscriptionSuccessfully}");
-                        if (result?.Length < 99)
-                        {
-                            _updateFunc?.Invoke(false, $"{hashCode}{result}");
-                        }
-
-                        int ret = ConfigHandler.AddBatchServers(config, result, id, true);
-                        if (ret <= 0)
-                        {
-                            Logging.SaveLog("FailedImportSubscription");
-                            Logging.SaveLog(result);
-                        }
-                        _updateFunc?.Invoke(false,
-                            ret > 0
-                                ? $"{hashCode}{ResUI.MsgUpdateSubscriptionEnd}"
-                                : $"{hashCode}{ResUI.MsgFailedImportSubscription}");
-                    }
-                    _updateFunc?.Invoke(false, "-------------------------------------------------------");
+                    //_updateFunc?.Invoke(false, $"{hashCode}{ResUI.MsgNoValidSubscription}");
+                    continue;
+                }
+                if (!url.StartsWith(Global.HttpsProtocol) && !url.StartsWith(Global.HttpProtocol))
+                {
+                    continue;
+                }
+                if (item.enabled == false)
+                {
+                    _updateFunc?.Invoke(false, $"{hashCode}{ResUI.MsgSkipSubscriptionUpdate}");
+                    continue;
                 }
 
-                _updateFunc?.Invoke(true, $"{ResUI.MsgUpdateSubscriptionEnd}");
-            });
+                var downloadHandle = new DownloadService();
+                downloadHandle.Error += (sender2, args) =>
+                {
+                    _updateFunc?.Invoke(false, $"{hashCode}{args.GetException().Message}");
+                };
+
+                _updateFunc?.Invoke(false, $"{hashCode}{ResUI.MsgStartGettingSubscriptions}");
+
+                //one url
+                url = Utils.GetPunycode(url);
+                //convert
+                if (Utils.IsNotEmpty(item.convertTarget))
+                {
+                    var subConvertUrl = Utils.IsNullOrEmpty(config.constItem.subConvertUrl) ? Global.SubConvertUrls.FirstOrDefault() : config.constItem.subConvertUrl;
+                    url = string.Format(subConvertUrl!, Utils.UrlEncode(url));
+                    if (!url.Contains("target="))
+                    {
+                        url += string.Format("&target={0}", item.convertTarget);
+                    }
+                    if (!url.Contains("config="))
+                    {
+                        url += string.Format("&config={0}", Global.SubConvertConfig.FirstOrDefault());
+                    }
+                }
+                var result = await downloadHandle.TryDownloadString(url, blProxy, userAgent);
+                if (blProxy && Utils.IsNullOrEmpty(result))
+                {
+                    result = await downloadHandle.TryDownloadString(url, false, userAgent);
+                }
+
+                //more url
+                if (Utils.IsNullOrEmpty(item.convertTarget) && Utils.IsNotEmpty(item.moreUrl.TrimEx()))
+                {
+                    if (Utils.IsNotEmpty(result) && Utils.IsBase64String(result))
+                    {
+                        result = Utils.Base64Decode(result);
+                    }
+
+                    var lstUrl = item.moreUrl.TrimEx().Split(",") ?? [];
+                    foreach (var it in lstUrl)
+                    {
+                        var url2 = Utils.GetPunycode(it);
+                        if (Utils.IsNullOrEmpty(url2))
+                        {
+                            continue;
+                        }
+
+                        var result2 = await downloadHandle.TryDownloadString(url2, blProxy, userAgent);
+                        if (blProxy && Utils.IsNullOrEmpty(result2))
+                        {
+                            result2 = await downloadHandle.TryDownloadString(url2, false, userAgent);
+                        }
+                        if (Utils.IsNotEmpty(result2))
+                        {
+                            if (Utils.IsBase64String(result2))
+                            {
+                                result += Utils.Base64Decode(result2);
+                            }
+                            else
+                            {
+                                result += result2;
+                            }
+                        }
+                    }
+                }
+
+                if (Utils.IsNullOrEmpty(result))
+                {
+                    _updateFunc?.Invoke(false, $"{hashCode}{ResUI.MsgSubscriptionDecodingFailed}");
+                }
+                else
+                {
+                    _updateFunc?.Invoke(false, $"{hashCode}{ResUI.MsgGetSubscriptionSuccessfully}");
+                    if (result?.Length < 99)
+                    {
+                        _updateFunc?.Invoke(false, $"{hashCode}{result}");
+                    }
+
+                    int ret = await ConfigHandler.AddBatchServers(config, result, id, true);
+                    if (ret <= 0)
+                    {
+                        Logging.SaveLog("FailedImportSubscription");
+                        Logging.SaveLog(result);
+                    }
+                    _updateFunc?.Invoke(false,
+                        ret > 0
+                            ? $"{hashCode}{ResUI.MsgUpdateSubscriptionEnd}"
+                            : $"{hashCode}{ResUI.MsgFailedImportSubscription}");
+                }
+                _updateFunc?.Invoke(false, "-------------------------------------------------------");
+            }
+
+            _updateFunc?.Invoke(true, $"{ResUI.MsgUpdateSubscriptionEnd}");
         }
 
         public async Task UpdateGeoFileAll(Config config, Action<bool, string> updateFunc)
         {
             await UpdateGeoFile("geosite", config, updateFunc);
             await UpdateGeoFile("geoip", config, updateFunc);
+            await UpdateSrsFileAll(config, updateFunc);
             _updateFunc?.Invoke(true, string.Format(ResUI.MsgDownloadGeoFileSuccessfully, "geo"));
         }
 
@@ -423,7 +421,7 @@ namespace ServiceLib.Services
                     && File.Exists(Path.Combine(Utils.StartupPath(), "D3DCompiler_47_cor3.dll"))
                     )
                 {
-                    return coreInfo?.DownloadUrlWin64?.Replace("v2rayN.zip", "zz_v2rayN-SelfContained.zip");
+                    return coreInfo?.DownloadUrlWin64?.Replace(".zip", "-SelfContained.zip");
                 }
 
                 return RuntimeInformation.ProcessArchitecture switch
@@ -454,24 +452,91 @@ namespace ServiceLib.Services
             var geoUrl = string.IsNullOrEmpty(config?.constItem.geoSourceUrl)
                 ? Global.GeoUrl
                 : config.constItem.geoSourceUrl;
-            var url = string.Format(Global.GeoUrl, geoName);
-            var fileName = Utils.GetTempPath(Utils.GetGuid());
+
+            var fileName = $"{geoName}.dat";
+            var targetPath = Utils.GetBinPath($"{fileName}");
+            var url = string.Format(geoUrl, geoName);
+
+            await DownloadGeoFile(url, fileName, targetPath, updateFunc);
+        }
+
+        private async Task UpdateSrsFileAll(Config config, Action<bool, string> updateFunc)
+        {
+            _config = config;
+            _updateFunc = updateFunc;
+
+            var geoipFiles = new List<string>();
+            var geoSiteFiles = new List<string>();
+
+            //Collect used files list
+            var routingItems = AppHandler.Instance.RoutingItems();
+            foreach (var routing in routingItems)
+            {
+                var rules = JsonUtils.Deserialize<List<RulesItem>>(routing.ruleSet);
+                foreach (var item in rules ?? [])
+                {
+                    foreach (var ip in item.ip ?? [])
+                    {
+                        var prefix = "geoip:";
+                        if (ip.StartsWith(prefix))
+                        {
+                            geoipFiles.Add(ip.Substring(prefix.Length));
+                        }
+                    }
+
+                    foreach (var domain in item.domain ?? [])
+                    {
+                        var prefix = "geosite:";
+                        if (domain.StartsWith(prefix))
+                        {
+                            geoSiteFiles.Add(domain.Substring(prefix.Length));
+                        }
+                    }
+                }
+            }
+
+            foreach (var item in geoipFiles.Distinct())
+            {
+                await UpdateSrsFile("geoip", item, config, updateFunc);
+            }
+
+            foreach (var item in geoSiteFiles.Distinct())
+            {
+                await UpdateSrsFile("geosite", item, config, updateFunc);
+            }
+        }
+
+        private async Task UpdateSrsFile(string type, string srsName, Config config, Action<bool, string> updateFunc)
+        {
+            var srsUrl = string.IsNullOrEmpty(_config.constItem.srsSourceUrl)
+                            ? Global.SingboxRulesetUrl
+                            : _config.constItem.srsSourceUrl;
+
+            var fileName = $"{type}-{srsName}.srs";
+            var targetPath = Path.Combine(Utils.GetBinPath("srss"), fileName);
+            var url = string.Format(srsUrl, type, $"{type}-{srsName}");
+
+            await DownloadGeoFile(url, fileName, targetPath, updateFunc);
+        }
+
+        private async Task DownloadGeoFile(string url, string fileName, string targetPath, Action<bool, string> updateFunc)
+        {
+            var tmpFileName = Utils.GetTempPath(Utils.GetGuid());
 
             DownloadService downloadHandle = new();
             downloadHandle.UpdateCompleted += (sender2, args) =>
             {
                 if (args.Success)
                 {
-                    _updateFunc?.Invoke(false, string.Format(ResUI.MsgDownloadGeoFileSuccessfully, geoName));
+                    _updateFunc?.Invoke(false, string.Format(ResUI.MsgDownloadGeoFileSuccessfully, fileName));
 
                     try
                     {
-                        if (File.Exists(fileName))
+                        if (File.Exists(tmpFileName))
                         {
-                            string targetPath = Utils.GetBinPath($"{geoName}.dat");
-                            File.Copy(fileName, targetPath, true);
+                            File.Copy(tmpFileName, targetPath, true);
 
-                            File.Delete(fileName);
+                            File.Delete(tmpFileName);
                             //_updateFunc?.Invoke(true, "");
                         }
                     }
@@ -490,7 +555,7 @@ namespace ServiceLib.Services
                 _updateFunc?.Invoke(false, args.GetException().Message);
             };
 
-            await downloadHandle.DownloadFileAsync(url, fileName, true, _timeout);
+            await downloadHandle.DownloadFileAsync(url, tmpFileName, true, _timeout);
         }
 
         #endregion private
