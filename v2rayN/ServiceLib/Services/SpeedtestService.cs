@@ -22,20 +22,20 @@ namespace ServiceLib.Services
             _selecteds = new List<ServerTestItem>();
             foreach (var it in selecteds)
             {
-                if (it.configType == EConfigType.Custom)
+                if (it.ConfigType == EConfigType.Custom)
                 {
                     continue;
                 }
-                if (it.port <= 0)
+                if (it.Port <= 0)
                 {
                     continue;
                 }
                 _selecteds.Add(new ServerTestItem()
                 {
-                    IndexId = it.indexId,
-                    Address = it.address,
-                    Port = it.port,
-                    ConfigType = it.configType
+                    IndexId = it.IndexId,
+                    Address = it.Address,
+                    Port = it.Port,
+                    ConfigType = it.ConfigType
                 });
             }
             //clear test result
@@ -99,11 +99,11 @@ namespace ServiceLib.Services
                     {
                         continue;
                     }
-                    tasks.Add(Task.Run(() =>
+                    tasks.Add(Task.Run(async () =>
                     {
                         try
                         {
-                            int time = GetTcpingTime(it.Address, it.Port);
+                            int time = await GetTcpingTime(it.Address, it.Port);
                             var output = FormatOut(time, Global.DelayUnit);
 
                             ProfileExHandler.Instance.SetTestDelay(it.IndexId, output);
@@ -203,8 +203,8 @@ namespace ServiceLib.Services
                 return;
             }
 
-            string url = _config.speedTestItem.speedTestUrl;
-            var timeout = _config.speedTestItem.speedTestTimeout;
+            string url = _config.SpeedTestItem.SpeedTestUrl;
+            var timeout = _config.SpeedTestItem.SpeedTestTimeout;
 
             DownloadService downloadHandle = new();
 
@@ -265,8 +265,8 @@ namespace ServiceLib.Services
                 return;
             }
 
-            string url = _config.speedTestItem.speedTestUrl;
-            var timeout = _config.speedTestItem.speedTestTimeout;
+            string url = _config.SpeedTestItem.SpeedTestUrl;
+            var timeout = _config.SpeedTestItem.SpeedTestTimeout;
 
             DownloadService downloadHandle = new();
 
@@ -331,12 +331,12 @@ namespace ServiceLib.Services
 
         private async Task<string> GetRealPingTime(DownloadService downloadHandle, IWebProxy webProxy)
         {
-            int responseTime = await downloadHandle.GetRealPingTime(_config.speedTestItem.speedPingTestUrl, webProxy, 10);
+            int responseTime = await downloadHandle.GetRealPingTime(_config.SpeedTestItem.SpeedPingTestUrl, webProxy, 10);
             //string output = Utile.IsNullOrEmpty(status) ? FormatOut(responseTime, "ms") : status;
             return FormatOut(responseTime, Global.DelayUnit);
         }
 
-        private int GetTcpingTime(string url, int port)
+        private async Task<int> GetTcpingTime(string url, int port)
         {
             int responseTime = -1;
 
@@ -370,10 +370,6 @@ namespace ServiceLib.Services
 
         private string FormatOut(object time, string unit)
         {
-            //if (time.ToString().Equals("-1"))
-            //{
-            //    return "Timeout";
-            //}
             return $"{time}";
         }
 

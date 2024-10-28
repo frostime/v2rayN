@@ -7,7 +7,7 @@ namespace ServiceLib.Handler
         private static readonly Lazy<ClashApiHandler> instance = new(() => new());
         public static ClashApiHandler Instance => instance.Value;
 
-        private Dictionary<String, ProxiesItem>? _proxies;
+        private Dictionary<string, ProxiesItem>? _proxies;
         public Dictionary<string, object> ProfileContent { get; set; }
 
         public async Task<Tuple<ClashProxies, ClashProviders>?> GetClashProxiesAsync(Config config)
@@ -28,7 +28,7 @@ namespace ServiceLib.Handler
                     return new Tuple<ClashProxies, ClashProviders>(clashProxies, clashProviders);
                 }
 
-                await Task.Delay(5000);
+                await Task.Delay(2000);
             }
 
             return null;
@@ -61,8 +61,8 @@ namespace ServiceLib.Handler
                     }
                     lstProxy.Add(new ClashProxyModel()
                     {
-                        name = kv.Value.name,
-                        type = kv.Value.type.ToLower(),
+                        Name = kv.Value.name,
+                        Type = kv.Value.type.ToLower(),
                     });
                 }
             }
@@ -72,16 +72,16 @@ namespace ServiceLib.Handler
                 return;
             }
             var urlBase = $"{GetApiUrl()}/proxies";
-            urlBase += @"/{0}/delay?timeout=10000&url=" + AppHandler.Instance.Config.speedTestItem.speedPingTestUrl;
+            urlBase += @"/{0}/delay?timeout=10000&url=" + AppHandler.Instance.Config.SpeedTestItem.SpeedPingTestUrl;
 
             List<Task> tasks = new List<Task>();
             foreach (var it in lstProxy)
             {
-                if (Global.notAllowTestType.Contains(it.type.ToLower()))
+                if (Global.notAllowTestType.Contains(it.Type.ToLower()))
                 {
                     continue;
                 }
-                var name = it.name;
+                var name = it.Name;
                 var url = string.Format(urlBase, name);
                 tasks.Add(Task.Run(async () =>
                 {

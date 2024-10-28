@@ -21,16 +21,33 @@ namespace ServiceLib.ViewModels
                 await SaveSubAsync();
             });
 
-            SelectedSource = subItem.id.IsNullOrEmpty() ? subItem : JsonUtils.DeepCopy(subItem);
+            SelectedSource = subItem.Id.IsNullOrEmpty() ? subItem : JsonUtils.DeepCopy(subItem);
         }
 
         private async Task SaveSubAsync()
         {
-            var remarks = SelectedSource.remarks;
+            var remarks = SelectedSource.Remarks;
             if (Utils.IsNullOrEmpty(remarks))
             {
                 NoticeHandler.Instance.Enqueue(ResUI.PleaseFillRemarks);
                 return;
+            }
+
+            var url = SelectedSource.Url;
+            if (url.IsNotEmpty())
+            {
+                var uri = Utils.TryUri(url);
+                if (uri == null)
+                {
+                    NoticeHandler.Instance.Enqueue(ResUI.InvalidUrlTip);
+                    return;
+                }
+                //Do not allow http protocol
+                if (url.StartsWith(Global.HttpProtocol) && !Utils.IsPrivateNetwork(uri.IdnHost))
+                {
+                    NoticeHandler.Instance.Enqueue(ResUI.InsecureUrlProtocol);
+                    //return;
+                }
             }
 
             if (await ConfigHandler.AddSubItem(_config, SelectedSource) == 0)

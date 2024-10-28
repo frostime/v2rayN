@@ -4,6 +4,7 @@ using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 using Splat;
 using System.Reactive;
+using System.Runtime.InteropServices;
 
 namespace ServiceLib.ViewModels
 {
@@ -28,12 +29,12 @@ namespace ServiceLib.ViewModels
                 await CheckUpdate();
             });
 
-            EnableCheckPreReleaseUpdate = _config.guiItem.checkPreReleaseUpdate;
+            EnableCheckPreReleaseUpdate = _config.GuiItem.CheckPreReleaseUpdate;
 
             this.WhenAnyValue(
             x => x.EnableCheckPreReleaseUpdate,
             y => y == true)
-                .Subscribe(c => { _config.guiItem.checkPreReleaseUpdate = EnableCheckPreReleaseUpdate; });
+                .Subscribe(c => { _config.GuiItem.CheckPreReleaseUpdate = EnableCheckPreReleaseUpdate; });
 
             RefreshSubItems();
         }
@@ -42,30 +43,34 @@ namespace ServiceLib.ViewModels
         {
             _checkUpdateItem.Clear();
 
-            _checkUpdateItem.Add(new CheckUpdateItem()
+            if (RuntimeInformation.ProcessArchitecture != Architecture.X86)
             {
-                IsSelected = false,
-                CoreType = _v2rayN,
-                Remarks = ResUI.menuCheckUpdate,
-            });
-            _checkUpdateItem.Add(new CheckUpdateItem()
-            {
-                IsSelected = true,
-                CoreType = ECoreType.Xray.ToString(),
-                Remarks = ResUI.menuCheckUpdate,
-            });
-            _checkUpdateItem.Add(new CheckUpdateItem()
-            {
-                IsSelected = true,
-                CoreType = ECoreType.mihomo.ToString(),
-                Remarks = ResUI.menuCheckUpdate,
-            });
-            _checkUpdateItem.Add(new CheckUpdateItem()
-            {
-                IsSelected = true,
-                CoreType = ECoreType.sing_box.ToString(),
-                Remarks = ResUI.menuCheckUpdate,
-            });
+                _checkUpdateItem.Add(new CheckUpdateItem()
+                {
+                    IsSelected = false,
+                    CoreType = _v2rayN,
+                    Remarks = ResUI.menuCheckUpdate,
+                });
+                _checkUpdateItem.Add(new CheckUpdateItem()
+                {
+                    IsSelected = true,
+                    CoreType = ECoreType.Xray.ToString(),
+                    Remarks = ResUI.menuCheckUpdate,
+                });
+                _checkUpdateItem.Add(new CheckUpdateItem()
+                {
+                    IsSelected = true,
+                    CoreType = ECoreType.mihomo.ToString(),
+                    Remarks = ResUI.menuCheckUpdate,
+                });
+                _checkUpdateItem.Add(new CheckUpdateItem()
+                {
+                    IsSelected = true,
+                    CoreType = ECoreType.sing_box.ToString(),
+                    Remarks = ResUI.menuCheckUpdate,
+                });
+            }
+
             _checkUpdateItem.Add(new CheckUpdateItem()
             {
                 IsSelected = true,
@@ -182,7 +187,7 @@ namespace ServiceLib.ViewModels
             {
                 _updateView?.Invoke(EViewAction.DispatcherCheckUpdateFinished, false);
                 await Task.Delay(2000);
-                UpgradeCore();
+                await UpgradeCore();
 
                 if (_lstUpdated.Any(x => x.CoreType == _v2rayN && x.IsFinished == true))
                 {
@@ -228,7 +233,7 @@ namespace ServiceLib.ViewModels
             }
         }
 
-        private void UpgradeCore()
+        private async Task UpgradeCore()
         {
             foreach (var item in _lstUpdated)
             {
@@ -263,7 +268,16 @@ namespace ServiceLib.ViewModels
                 }
                 else
                 {
-                    FileManager.ZipExtractToFile(fileName, toPath, _config.guiItem.ignoreGeoUpdateCore ? "geo" : "");
+                    FileManager.ZipExtractToFile(fileName, toPath, _config.GuiItem.IgnoreGeoUpdateCore ? "geo" : "");
+                }
+
+                if (Utils.IsLinux())
+                {
+                    var filesList = (new DirectoryInfo(toPath)).GetFiles().Select(u => u.FullName).ToList();
+                    foreach (var file in filesList)
+                    {
+                        await Utils.SetLinuxChmod(Path.Combine(toPath, item.CoreType));
+                    }
                 }
 
                 UpdateView(item.CoreType, ResUI.MsgUpdateV2rayCoreSuccessfully);

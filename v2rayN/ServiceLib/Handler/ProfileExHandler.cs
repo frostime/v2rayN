@@ -9,23 +9,32 @@ namespace ServiceLib.Handler
         private static readonly Lazy<ProfileExHandler> _instance = new(() => new());
         private ConcurrentBag<ProfileExItem> _lstProfileEx = [];
         private Queue<string> _queIndexIds = new();
-        public ConcurrentBag<ProfileExItem> ProfileExs => _lstProfileEx;
         public static ProfileExHandler Instance => _instance.Value;
 
         public ProfileExHandler()
         {
+            //Init();
+        }
+
+        public async Task Init()
+        {
+            await InitData();
             Task.Run(async () =>
             {
-                await Init();
                 while (true)
                 {
-                    await SaveQueueIndexIds();
                     await Task.Delay(1000 * 600);
+                    await SaveQueueIndexIds();
                 }
             });
         }
 
-        private async Task Init()
+        public async Task<ConcurrentBag<ProfileExItem>> GetProfileExs()
+        {
+            return _lstProfileEx;
+        }
+
+        private async Task InitData()
         {
             await SQLiteHelper.Instance.ExecuteAsync($"delete from ProfileExItem where indexId not in ( select indexId from ProfileItem )");
 
@@ -52,8 +61,8 @@ namespace ServiceLib.Handler
                 for (int i = 0; i < cnt; i++)
                 {
                     var id = _queIndexIds.Dequeue();
-                    var item = lstExists.FirstOrDefault(t => t.indexId == id);
-                    var itemNew = _lstProfileEx?.FirstOrDefault(t => t.indexId == id);
+                    var item = lstExists.FirstOrDefault(t => t.IndexId == id);
+                    var itemNew = _lstProfileEx?.FirstOrDefault(t => t.IndexId == id);
                     if (itemNew is null)
                     {
                         continue;
@@ -87,10 +96,10 @@ namespace ServiceLib.Handler
         {
             profileEx = new()
             {
-                indexId = indexId,
-                delay = 0,
-                speed = 0,
-                sort = 0
+                IndexId = indexId,
+                Delay = 0,
+                Speed = 0,
+                Sort = 0
             };
             _lstProfileEx.Add(profileEx);
             IndexIdEnqueue(indexId);
@@ -116,49 +125,49 @@ namespace ServiceLib.Handler
 
         public void SetTestDelay(string indexId, string delayVal)
         {
-            var profileEx = _lstProfileEx.FirstOrDefault(t => t.indexId == indexId);
+            var profileEx = _lstProfileEx.FirstOrDefault(t => t.IndexId == indexId);
             if (profileEx == null)
             {
                 AddProfileEx(indexId, ref profileEx);
             }
 
             int.TryParse(delayVal, out int delay);
-            profileEx.delay = delay;
+            profileEx.Delay = delay;
             IndexIdEnqueue(indexId);
         }
 
         public void SetTestSpeed(string indexId, string speedVal)
         {
-            var profileEx = _lstProfileEx.FirstOrDefault(t => t.indexId == indexId);
+            var profileEx = _lstProfileEx.FirstOrDefault(t => t.IndexId == indexId);
             if (profileEx == null)
             {
                 AddProfileEx(indexId, ref profileEx);
             }
 
             decimal.TryParse(speedVal, out decimal speed);
-            profileEx.speed = speed;
+            profileEx.Speed = speed;
             IndexIdEnqueue(indexId);
         }
 
         public void SetSort(string indexId, int sort)
         {
-            var profileEx = _lstProfileEx.FirstOrDefault(t => t.indexId == indexId);
+            var profileEx = _lstProfileEx.FirstOrDefault(t => t.IndexId == indexId);
             if (profileEx == null)
             {
                 AddProfileEx(indexId, ref profileEx);
             }
-            profileEx.sort = sort;
+            profileEx.Sort = sort;
             IndexIdEnqueue(indexId);
         }
 
         public int GetSort(string indexId)
         {
-            var profileEx = _lstProfileEx.FirstOrDefault(t => t.indexId == indexId);
+            var profileEx = _lstProfileEx.FirstOrDefault(t => t.IndexId == indexId);
             if (profileEx == null)
             {
                 return 0;
             }
-            return profileEx.sort;
+            return profileEx.Sort;
         }
 
         public int GetMaxSort()
@@ -167,7 +176,7 @@ namespace ServiceLib.Handler
             {
                 return 0;
             }
-            return _lstProfileEx.Max(t => t == null ? 0 : t.sort);
+            return _lstProfileEx.Max(t => t == null ? 0 : t.Sort);
         }
     }
 }

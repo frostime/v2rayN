@@ -1,5 +1,7 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
+using Avalonia.Media;
 using Avalonia.Styling;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
@@ -9,14 +11,11 @@ namespace v2rayN.Desktop.ViewModels
 {
     public class ThemeSettingViewModel : MyReactiveObject
     {
-        [Reactive]
-        public bool ColorModeDark { get; set; }
+        [Reactive] public bool ColorModeDark { get; set; }
 
-        [Reactive]
-        public int CurrentFontSize { get; set; }
+        [Reactive] public int CurrentFontSize { get; set; }
 
-        [Reactive]
-        public string CurrentLanguage { get; set; }
+        [Reactive] public string CurrentLanguage { get; set; }
 
         public ThemeSettingViewModel()
         {
@@ -28,49 +27,50 @@ namespace v2rayN.Desktop.ViewModels
 
         private void RestoreUI()
         {
-            ModifyTheme(_config.uiItem.colorModeDark);
+            ModifyTheme(_config.UiItem.ColorModeDark);
+            ModifyFontFamily();
         }
 
         private void BindingUI()
         {
-            ColorModeDark = _config.uiItem.colorModeDark;
-            CurrentFontSize = _config.uiItem.currentFontSize;
-            CurrentLanguage = _config.uiItem.currentLanguage;
+            ColorModeDark = _config.UiItem.ColorModeDark;
+            CurrentFontSize = _config.UiItem.CurrentFontSize;
+            CurrentLanguage = _config.UiItem.CurrentLanguage;
 
             this.WhenAnyValue(x => x.ColorModeDark)
-                      .Subscribe(c =>
-                      {
-                          if (_config.uiItem.colorModeDark != ColorModeDark)
-                          {
-                              _config.uiItem.colorModeDark = ColorModeDark;
-                              ModifyTheme(ColorModeDark);
-                              ConfigHandler.SaveConfig(_config);
-                          }
-                      });
-
-            this.WhenAnyValue(
-               x => x.CurrentFontSize,
-               y => y > 0)
-                  .Subscribe(c =>
-                  {
-                      if (CurrentFontSize >= Global.MinFontSize)
-                      {
-                          _config.uiItem.currentFontSize = CurrentFontSize;
-                          double size = CurrentFontSize;
-                          ModifyFontSize(size);
-
-                          ConfigHandler.SaveConfig(_config);
-                      }
-                  });
-
-            this.WhenAnyValue(
-             x => x.CurrentLanguage,
-             y => y != null && !y.IsNullOrEmpty())
                 .Subscribe(c =>
                 {
-                    if (Utils.IsNotEmpty(CurrentLanguage) && _config.uiItem.currentLanguage != CurrentLanguage)
+                    if (_config.UiItem.ColorModeDark != ColorModeDark)
                     {
-                        _config.uiItem.currentLanguage = CurrentLanguage;
+                        _config.UiItem.ColorModeDark = ColorModeDark;
+                        ModifyTheme(ColorModeDark);
+                        ConfigHandler.SaveConfig(_config);
+                    }
+                });
+
+            this.WhenAnyValue(
+                    x => x.CurrentFontSize,
+                    y => y > 0)
+                .Subscribe(c =>
+                {
+                    if (CurrentFontSize >= Global.MinFontSize)
+                    {
+                        _config.UiItem.CurrentFontSize = CurrentFontSize;
+                        double size = CurrentFontSize;
+                        ModifyFontSize(size);
+
+                        ConfigHandler.SaveConfig(_config);
+                    }
+                });
+
+            this.WhenAnyValue(
+                    x => x.CurrentLanguage,
+                    y => y != null && !y.IsNullOrEmpty())
+                .Subscribe(c =>
+                {
+                    if (Utils.IsNotEmpty(CurrentLanguage) && _config.UiItem.CurrentLanguage != CurrentLanguage)
+                    {
+                        _config.UiItem.CurrentLanguage = CurrentLanguage;
                         Thread.CurrentThread.CurrentUICulture = new(CurrentLanguage);
                         ConfigHandler.SaveConfig(_config);
                         NoticeHandler.Instance.Enqueue(ResUI.NeedRebootTips);
@@ -89,53 +89,51 @@ namespace v2rayN.Desktop.ViewModels
 
         private void ModifyFontSize(double size)
         {
-            Style buttonStyle = new(x => x.OfType<Button>());
-            buttonStyle.Add(new Setter()
+            Style style = new(x => Selectors.Or(
+                x.OfType<Button>(),
+                x.OfType<TextBox>(),
+                x.OfType<TextBlock>(),
+                x.OfType<Menu>(),
+                x.OfType<DataGridRow>(),
+                x.OfType<ListBoxItem>()
+            ));
+            style.Add(new Setter()
             {
-                Property = Button.FontSizeProperty,
+                Property = TemplatedControl.FontSizeProperty,
                 Value = size,
             });
-            Application.Current?.Styles.Add(buttonStyle);
+            Application.Current?.Styles.Add(style);
+        }
 
-            Style textStyle = new(x => x.OfType<TextBox>());
-            textStyle.Add(new Setter()
+        private void ModifyFontFamily()
+        {
+            var currentFontFamily = _config.UiItem.CurrentFontFamily;
+            if (currentFontFamily.IsNullOrEmpty())
             {
-                Property = TextBox.FontSizeProperty,
-                Value = size,
-            });
-            Application.Current?.Styles.Add(textStyle);
+                return;
+            }
 
-            Style textBlockStyle = new(x => x.OfType<TextBlock>());
-            textBlockStyle.Add(new Setter()
+            try
             {
-                Property = TextBlock.FontSizeProperty,
-                Value = size,
-            });
-            Application.Current?.Styles.Add(textBlockStyle);
-
-            Style menuStyle = new(x => x.OfType<Menu>());
-            menuStyle.Add(new Setter()
+                Style style = new(x => Selectors.Or(
+                    x.OfType<Button>(),
+                    x.OfType<TextBox>(),
+                    x.OfType<TextBlock>(),
+                    x.OfType<Menu>(),
+                    x.OfType<DataGridRow>(),
+                    x.OfType<ListBoxItem>()
+                ));
+                style.Add(new Setter()
+                {
+                    Property = TemplatedControl.FontFamilyProperty,
+                    Value = new FontFamily(currentFontFamily),
+                });
+                Application.Current?.Styles.Add(style);
+            }
+            catch (Exception ex)
             {
-                Property = Menu.FontSizeProperty,
-                Value = size,
-            });
-            Application.Current?.Styles.Add(menuStyle);
-
-            Style dataStyle = new(x => x.OfType<DataGridRow>());
-            dataStyle.Add(new Setter()
-            {
-                Property = DataGridRow.FontSizeProperty,
-                Value = size,
-            });
-            Application.Current?.Styles.Add(dataStyle);
-
-            Style listStyle = new(x => x.OfType<ListBoxItem>());
-            listStyle.Add(new Setter()
-            {
-                Property = ListBoxItem.FontSizeProperty,
-                Value = size,
-            });
-            Application.Current?.Styles.Add(listStyle);
+                Logging.SaveLog("ModifyFontFamily", ex);
+            }
         }
     }
 }

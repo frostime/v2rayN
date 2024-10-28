@@ -17,7 +17,6 @@ namespace v2rayN.Views
 
             this.Owner = Application.Current.MainWindow;
             _config = AppHandler.Instance.Config;
-            var lstFonts = GetFonts(Utils.GetFontsPath());
 
             ViewModel = new OptionSettingViewModel(UpdateViewHandler);
 
@@ -26,7 +25,7 @@ namespace v2rayN.Views
             {
                 clbdestOverride.Items.Add(it);
             });
-            _config.inbound[0].destOverride?.ForEach(it =>
+            _config.Inbound[0].DestOverride?.ForEach(it =>
             {
                 clbdestOverride.SelectedItems.Add(it);
             });
@@ -101,9 +100,6 @@ namespace v2rayN.Views
             {
                 cmbMainGirdOrientation.Items.Add(it.ToString());
             }
-
-            lstFonts.ForEach(it => { cmbcurrentFontFamily.Items.Add(it); });
-            cmbcurrentFontFamily.Items.Add(string.Empty);
 
             this.WhenActivated(disposables =>
             {
@@ -180,7 +176,7 @@ namespace v2rayN.Views
 
                 this.BindCommand(ViewModel, vm => vm.SaveCmd, v => v.btnSave).DisposeWith(disposables);
             });
-            WindowsUtils.SetDarkBorder(this, AppHandler.Instance.Config.uiItem.followSystemTheme ? !WindowsUtils.IsLightTheme() : AppHandler.Instance.Config.uiItem.colorModeDark);
+            WindowsUtils.SetDarkBorder(this, AppHandler.Instance.Config.UiItem.FollowSystemTheme ? !WindowsUtils.IsLightTheme() : AppHandler.Instance.Config.UiItem.ColorModeDark);
         }
 
         private async Task<bool> UpdateViewHandler(EViewAction action, object? obj)
@@ -191,11 +187,22 @@ namespace v2rayN.Views
                     WindowsUtils.SetAutoRun(Global.AutoRunRegPath, Global.AutoRunName, togAutoRun.IsChecked ?? false);
                     this.DialogResult = true;
                     break;
+
+                case EViewAction.InitSettingFont:
+                    await InitSettingFont();
+                    break;
             }
             return await Task.FromResult(true);
         }
 
-        private List<string> GetFonts(string path)
+        private async Task InitSettingFont()
+        {
+            var lstFonts = await GetFonts(Utils.GetFontsPath());
+            lstFonts.ForEach(it => { cmbcurrentFontFamily.Items.Add(it); });
+            cmbcurrentFontFamily.Items.Add(string.Empty);
+        }
+
+        private async Task<List<string>> GetFonts(string path)
         {
             var lstFonts = new List<string>();
             try
@@ -206,7 +213,7 @@ namespace v2rayN.Views
                 {
                     files.AddRange(Directory.GetFiles(path, pattern));
                 }
-                var culture = _config.uiItem.currentLanguage == Global.Languages[0] ? "zh-cn" : "en-us";
+                var culture = _config.UiItem.CurrentLanguage == Global.Languages[0] ? "zh-cn" : "en-us";
                 var culture2 = "en-us";
                 foreach (var ttf in files)
                 {
@@ -241,7 +248,7 @@ namespace v2rayN.Views
             {
                 Logging.SaveLog("fill fonts error", ex);
             }
-            return lstFonts;
+            return lstFonts.OrderBy(t => t).ToList();
         }
 
         private void ClbdestOverride_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)

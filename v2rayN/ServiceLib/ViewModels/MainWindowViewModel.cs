@@ -142,11 +142,11 @@ namespace ServiceLib.ViewModels
             });
             SubGroupUpdateCmd = ReactiveCommand.CreateFromTask(async () =>
             {
-                await UpdateSubscriptionProcess(_config.subIndexId, false);
+                await UpdateSubscriptionProcess(_config.SubIndexId, false);
             });
             SubGroupUpdateViaProxyCmd = ReactiveCommand.CreateFromTask(async () =>
             {
-                await UpdateSubscriptionProcess(_config.subIndexId, true);
+                await UpdateSubscriptionProcess(_config.SubIndexId, true);
             });
 
             //Setting
@@ -204,16 +204,17 @@ namespace ServiceLib.ViewModels
 
         private async Task Init()
         {
-            _config.uiItem.showInTaskbar = true;
+            _config.UiItem.ShowInTaskbar = true;
 
             await ConfigHandler.InitBuiltinRouting(_config);
             await ConfigHandler.InitBuiltinDNS(_config);
-            CoreHandler.Instance.Init(_config, UpdateHandler);
+            await ProfileExHandler.Instance.Init();
+            await CoreHandler.Instance.Init(_config, UpdateHandler);
             TaskHandler.Instance.RegUpdateTask(_config, UpdateTaskHandler);
 
-            if (_config.guiItem.enableStatistics)
+            if (_config.GuiItem.EnableStatistics)
             {
-                StatisticsHandler.Instance.Init(_config, UpdateStatisticsHandler);
+                await StatisticsHandler.Instance.Init(_config, UpdateStatisticsHandler);
             }
 
             await Reload();
@@ -238,13 +239,13 @@ namespace ServiceLib.ViewModels
             NoticeHandler.Instance.SendMessageEx(msg);
             if (success)
             {
-                var indexIdOld = _config.indexId;
+                var indexIdOld = _config.IndexId;
                 RefreshServers();
-                if (indexIdOld != _config.indexId)
+                if (indexIdOld != _config.IndexId)
                 {
                     Reload();
                 }
-                if (_config.uiItem.enableAutoAdjustMainLvColWidth)
+                if (_config.UiItem.EnableAutoAdjustMainLvColWidth)
                 {
                     _updateView?.Invoke(EViewAction.AdjustMainLvColWidth, null);
                 }
@@ -253,7 +254,7 @@ namespace ServiceLib.ViewModels
 
         private void UpdateStatisticsHandler(ServerSpeedItem update)
         {
-            if (!_config.uiItem.showInTaskbar)
+            if (!_config.UiItem.ShowInTaskbar)
             {
                 return;
             }
@@ -265,7 +266,7 @@ namespace ServiceLib.ViewModels
             try
             {
                 Locator.Current.GetService<StatusBarViewModel>()?.UpdateStatistics(update);
-                if ((update.proxyUp + update.proxyDown) > 0 && DateTime.Now.Second % 3 == 0)
+                if ((update.ProxyUp + update.ProxyDown) > 0 && DateTime.Now.Second % 3 == 0)
                 {
                     Locator.Current.GetService<ProfilesViewModel>()?.UpdateStatistics(update);
                 }
@@ -312,6 +313,7 @@ namespace ServiceLib.ViewModels
             {
                 StartInfo = new ProcessStartInfo
                 {
+                    UseShellExecute = true,
                     FileName = fileName,
                     Arguments = arg.AppendQuotes(),
                     WorkingDirectory = Utils.StartupPath()
@@ -351,9 +353,9 @@ namespace ServiceLib.ViewModels
         {
             ProfileItem item = new()
             {
-                subid = _config.subIndexId,
-                configType = eConfigType,
-                isSub = false,
+                Subid = _config.SubIndexId,
+                ConfigType = eConfigType,
+                IsSub = false,
             };
 
             bool? ret = false;
@@ -368,7 +370,7 @@ namespace ServiceLib.ViewModels
             if (ret == true)
             {
                 RefreshServers();
-                if (item.indexId == _config.indexId)
+                if (item.IndexId == _config.IndexId)
                 {
                     await Reload();
                 }
@@ -382,12 +384,16 @@ namespace ServiceLib.ViewModels
                 await _updateView?.Invoke(EViewAction.AddServerViaClipboard, null);
                 return;
             }
-            int ret = await ConfigHandler.AddBatchServers(_config, clipboardData, _config.subIndexId, false);
+            int ret = await ConfigHandler.AddBatchServers(_config, clipboardData, _config.SubIndexId, false);
             if (ret > 0)
             {
                 RefreshSubscriptions();
                 RefreshServers();
                 NoticeHandler.Instance.Enqueue(string.Format(ResUI.SuccessfullyImportedServerViaClipboard, ret));
+            }
+            else
+            {
+                NoticeHandler.Instance.Enqueue(ResUI.OperationFailed);
             }
         }
 
@@ -426,12 +432,16 @@ namespace ServiceLib.ViewModels
             }
             else
             {
-                int ret = await ConfigHandler.AddBatchServers(_config, result, _config.subIndexId, false);
+                int ret = await ConfigHandler.AddBatchServers(_config, result, _config.SubIndexId, false);
                 if (ret > 0)
                 {
                     RefreshSubscriptions();
                     RefreshServers();
                     NoticeHandler.Instance.Enqueue(ResUI.SuccessfullyImportedServerViaScan);
+                }
+                else
+                {
+                    NoticeHandler.Instance.Enqueue(ResUI.OperationFailed);
                 }
             }
         }
@@ -566,13 +576,13 @@ namespace ServiceLib.ViewModels
 
         public async Task CloseCore()
         {
-            await ConfigHandler.SaveConfig(_config, false);
-            CoreHandler.Instance.CoreStop();
+            await ConfigHandler.SaveConfig(_config);
+            await CoreHandler.Instance.CoreStop();
         }
 
         private async Task AutoHideStartup()
         {
-            if (_config.uiItem.autoHideStartup)
+            if (_config.UiItem.AutoHideStartup)
             {
                 ShowHideWindow(false);
             }
@@ -588,7 +598,7 @@ namespace ServiceLib.ViewModels
             await ConfigHandler.InitRouting(_config);
             Locator.Current.GetService<StatusBarViewModel>()?.RefreshRoutingsMenu();
 
-            await ConfigHandler.SaveConfig(_config, false);
+            await ConfigHandler.SaveConfig(_config);
             await new UpdateService().UpdateGeoFileAll(_config, UpdateHandler);
             await Reload();
         }
