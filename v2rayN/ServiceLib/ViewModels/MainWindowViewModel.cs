@@ -52,8 +52,6 @@ namespace ServiceLib.ViewModels
 
         public ReactiveCommand<Unit, Unit> ReloadCmd { get; }
 
-        public ReactiveCommand<Unit, Unit> ExitCmd { get; }
-
         [Reactive]
         public bool BlReloadEnabled { get; set; }
 
@@ -189,11 +187,6 @@ namespace ServiceLib.ViewModels
                 await Reload();
             });
 
-            ExitCmd = ReactiveCommand.CreateFromTask(async () =>
-            {
-                await Exit();
-            });
-
             RegionalPresetDefaultCmd = ReactiveCommand.CreateFromTask(async () =>
             {
                 await ApplyRegionalPreset(EPresetType.Default);
@@ -226,6 +219,7 @@ namespace ServiceLib.ViewModels
 
             await Reload();
             await AutoHideStartup();
+            Locator.Current.GetService<StatusBarViewModel>()?.RefreshRoutingsMenu();
         }
 
         #endregion Init
@@ -593,16 +587,6 @@ namespace ServiceLib.ViewModels
             {
                 ShowHideWindow(false);
             }
-        }
-
-        private async Task Exit()
-        {
-            if (await _updateView?.Invoke(EViewAction.ShowYesNo, null) == false)
-            {
-                return;
-            }
-
-            await MyAppExitAsync(false);
         }
 
         #endregion core job

@@ -1,4 +1,4 @@
-﻿using System.Data;
+using System.Data;
 using System.Net;
 using System.Net.NetworkInformation;
 
@@ -484,7 +484,7 @@ namespace ServiceLib.Services.CoreConfig
                 singboxConfig.inbounds = [];
 
                 if (!_config.TunModeItem.EnableTun
-                    || _config.TunModeItem.EnableTun && _config.TunModeItem.EnableExInbound && _config.RunningCoreType == ECoreType.sing_box)
+                    || (_config.TunModeItem.EnableTun && _config.TunModeItem.EnableExInbound && _config.RunningCoreType == ECoreType.sing_box))
                 {
                     var inbound = new Inbound4Sbox()
                     {
@@ -558,7 +558,7 @@ namespace ServiceLib.Services.CoreConfig
                     //tunInbound.sniff_override_destination = _config.inbound[0].routeOnly ? false : _config.inbound[0].sniffingEnabled;
                     if (_config.TunModeItem.EnableIPv6Address == false)
                     {
-                        tunInbound.inet6_address = null;
+                        tunInbound.address = ["172.18.0.1/30"];
                     }
 
                     singboxConfig.inbounds.Add(tunInbound);
