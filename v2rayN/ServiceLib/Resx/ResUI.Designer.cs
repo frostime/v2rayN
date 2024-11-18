@@ -3104,6 +3104,15 @@ namespace ServiceLib.Resx {
         }
         
         /// <summary>
+        ///   查找类似 Hide to tray when closing the window 的本地化字符串。
+        /// </summary>
+        public static string TbSettingsHide2TrayWhenClose {
+            get {
+                return ResourceManager.GetString("TbSettingsHide2TrayWhenClose", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 HTTP Port 的本地化字符串。
         /// </summary>
         public static string TbSettingsHttpPort {
@@ -3145,6 +3154,42 @@ namespace ServiceLib.Resx {
         public static string TbSettingsLanguage {
             get {
                 return ResourceManager.GetString("TbSettingsLanguage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Linux system sudo password 的本地化字符串。
+        /// </summary>
+        public static string TbSettingsLinuxSudoPassword {
+            get {
+                return ResourceManager.GetString("TbSettingsLinuxSudoPassword", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Please set the sudo password in Tun mode settings first 的本地化字符串。
+        /// </summary>
+        public static string TbSettingsLinuxSudoPasswordIsEmpty {
+            get {
+                return ResourceManager.GetString("TbSettingsLinuxSudoPasswordIsEmpty", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Please do not run this app with sudo 的本地化字符串。
+        /// </summary>
+        public static string TbSettingsLinuxSudoPasswordNotSudoRunApp {
+            get {
+                return ResourceManager.GetString("TbSettingsLinuxSudoPasswordNotSudoRunApp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 The password is encrypted and stored only in local files. 的本地化字符串。
+        /// </summary>
+        public static string TbSettingsLinuxSudoPasswordTip {
+            get {
+                return ResourceManager.GetString("TbSettingsLinuxSudoPasswordTip", resourceCulture);
             }
         }
         
@@ -3662,6 +3707,15 @@ namespace ServiceLib.Resx {
         }
         
         /// <summary>
+        ///   查找类似 XHTTP Extra raw JSON, format: { XHTTPObject } 的本地化字符串。
+        /// </summary>
+        public static string TransportExtraTip {
+            get {
+                return ResourceManager.GetString("TransportExtraTip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 *tcp camouflage type 的本地化字符串。
         /// </summary>
         public static string TransportHeaderTypeTip1 {
@@ -3698,7 +3752,16 @@ namespace ServiceLib.Resx {
         }
         
         /// <summary>
-        ///   查找类似 *ws/httpupgrade/splithttp path 的本地化字符串。
+        ///   查找类似 *xhttp mode 的本地化字符串。
+        /// </summary>
+        public static string TransportHeaderTypeTip5 {
+            get {
+                return ResourceManager.GetString("TransportHeaderTypeTip5", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 *ws/httpupgrade/xhttp path 的本地化字符串。
         /// </summary>
         public static string TransportPathTip1 {
             get {
@@ -3752,7 +3815,7 @@ namespace ServiceLib.Resx {
         }
         
         /// <summary>
-        ///   查找类似 *ws/httpupgrade/splithttp host 的本地化字符串。
+        ///   查找类似 *ws/httpupgrade/xhttp host 的本地化字符串。
         /// </summary>
         public static string TransportRequestHostTip2 {
             get {

@@ -59,15 +59,18 @@ namespace ServiceLib.Handler
 
             var fileName = Utils.GetConfigPath(Global.CoreConfigFileName);
             var result = await CoreConfigHandler.GenerateClientConfig(node, fileName);
-            ShowMsg(false, result.Msg);
             if (result.Success != true)
             {
+                ShowMsg(true, result.Msg);
                 return;
             }
             else
             {
                 ShowMsg(true, $"{node.GetSummary()}");
+                ShowMsg(false, $"{Environment.OSVersion} - {(Environment.Is64BitOperatingSystem ? 64 : 32)}");
+                ShowMsg(false, string.Format(ResUI.StartService, DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")));
                 await CoreStop();
+                await Task.Delay(100);
                 await CoreStart(node);
 
                 //In tun mode, do a delay check and restart the core
@@ -99,6 +102,8 @@ namespace ServiceLib.Handler
             ShowMsg(false, result.Msg);
             if (result.Success)
             {
+                ShowMsg(false, string.Format(ResUI.StartService, DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")));
+                ShowMsg(false, configPath);
                 pid = await CoreStartSpeedtest(configPath, coreType);
             }
             return pid;
@@ -166,24 +171,12 @@ namespace ServiceLib.Handler
 
         private async Task CoreStart(ProfileItem node)
         {
-            ShowMsg(false, $"{Environment.OSVersion} - {(Environment.Is64BitOperatingSystem ? 64 : 32)}");
-            ShowMsg(false, string.Format(ResUI.StartService, DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")));
-
-            //ECoreType coreType;
-            //if (node.configType != EConfigType.Custom && _config.tunModeItem.enableTun)
-            //{
-            //    coreType = ECoreType.sing_box;
-            //}
-            //else
-            //{
-            //    coreType = LazyConfig.Instance.GetCoreType(node, node.configType);
-            //}
             var coreType = AppHandler.Instance.GetCoreType(node, node.ConfigType);
             _config.RunningCoreType = coreType;
             var coreInfo = CoreInfoHandler.Instance.GetCoreInfo(coreType);
 
             var displayLog = node.ConfigType != EConfigType.Custom || node.DisplayLog;
-            var proc = await RunProcess(coreInfo, Global.CoreConfigFileName, displayLog);
+            var proc = await RunProcess(coreInfo, Global.CoreConfigFileName, displayLog, true);
             if (proc is null)
             {
                 return;
@@ -225,7 +218,7 @@ namespace ServiceLib.Handler
                     if (result.Success)
                     {
                         var coreInfo2 = CoreInfoHandler.Instance.GetCoreInfo(preCoreType);
-                        var proc2 = await RunProcess(coreInfo2, Global.CorePreConfigFileName, true);
+                        var proc2 = await RunProcess(coreInfo2, Global.CorePreConfigFileName, true, true);
                         if (proc2 is not null)
                         {
                             _processPre = proc2;
@@ -237,13 +230,10 @@ namespace ServiceLib.Handler
 
         private async Task<int> CoreStartSpeedtest(string configPath, ECoreType coreType)
         {
-            ShowMsg(false, string.Format(ResUI.StartService, DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")));
-
-            ShowMsg(false, configPath);
             try
             {
                 var coreInfo = CoreInfoHandler.Instance.GetCoreInfo(coreType);
-                var proc = await RunProcess(coreInfo, Global.CoreSpeedtestConfigFileName, true);
+                var proc = await RunProcess(coreInfo, Global.CoreSpeedtestConfigFileName, true, false);
                 if (proc is null)
                 {
                     return -1;
@@ -264,17 +254,28 @@ namespace ServiceLib.Handler
             _updateFunc?.Invoke(notify, msg);
         }
 
+        private bool IsNeedSudo(ECoreType eCoreType)
+        {
+            return _config.TunModeItem.EnableTun
+                   && eCoreType == ECoreType.sing_box
+                   && Utils.IsLinux()
+                   && _config.TunModeItem.LinuxSudoPwd.IsNotEmpty()
+                ;
+        }
+
         #endregion Private
 
         #region Process
 
-        private async Task<Process?> RunProcess(CoreInfo coreInfo, string configPath, bool displayLog)
+        private async Task<Process?> RunProcess(CoreInfo coreInfo, string configPath, bool displayLog, bool mayNeedSudo)
         {
             var fileName = CoreFindExe(coreInfo);
             if (Utils.IsNullOrEmpty(fileName))
             {
                 return null;
             }
+
+            var isNeedSudo = mayNeedSudo && IsNeedSudo(coreInfo.CoreType);
             try
             {
                 Process proc = new()
@@ -292,6 +293,17 @@ namespace ServiceLib.Handler
                         StandardErrorEncoding = displayLog ? Encoding.UTF8 : null,
                     }
                 };
+
+                if (isNeedSudo)
+                {
+                    proc.StartInfo.FileName = $"/bin/sudo";
+                    proc.StartInfo.Arguments = $"-S {fileName.AppendQuotes()} {string.Format(coreInfo.Arguments, Utils.GetConfigPath(configPath).AppendQuotes())}";
+                    proc.StartInfo.WorkingDirectory = null;
+                    proc.StartInfo.StandardInputEncoding = Encoding.UTF8;
+                    proc.StartInfo.RedirectStandardInput = true;
+                    Logging.SaveLog(proc.StartInfo.Arguments);
+                }
+
                 var startUpErrorMessage = new StringBuilder();
                 var startUpSuccessful = false;
                 if (displayLog)
@@ -313,6 +325,16 @@ namespace ServiceLib.Handler
                     };
                 }
                 proc.Start();
+
+                if (isNeedSudo)
+                {
+                    var pwd = DesUtils.Decrypt(_config.TunModeItem.LinuxSudoPwd);
+                    await Task.Delay(10);
+                    await proc.StandardInput.WriteLineAsync(pwd);
+                    await Task.Delay(10);
+                    await proc.StandardInput.WriteLineAsync(pwd);
+                }
+
                 if (displayLog)
                 {
                     proc.BeginOutputReadLine();

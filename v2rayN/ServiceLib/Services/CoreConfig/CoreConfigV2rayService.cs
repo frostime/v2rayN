@@ -27,6 +27,12 @@ namespace ServiceLib.Services.CoreConfig
                     return ret;
                 }
 
+                if (node.GetNetwork() is nameof(ETransport.quic))
+                {
+                    ret.Msg = ResUI.Incorrectconfiguration + $" - {node.GetNetwork()}";
+                    return ret;
+                }
+
                 ret.Msg = ResUI.InitialConfiguration;
 
                 var result = Utils.GetEmbedText(Global.V2raySampleClient);
@@ -366,8 +372,8 @@ namespace ServiceLib.Services.CoreConfig
                 else
                 {
                     v2rayConfig.log.loglevel = _config.CoreBasicItem.Loglevel;
-                    v2rayConfig.log.access = "";
-                    v2rayConfig.log.error = "";
+                    v2rayConfig.log.access = null;
+                    v2rayConfig.log.error = null;
                 }
             }
             catch (Exception ex)
@@ -920,23 +926,35 @@ namespace ServiceLib.Services.CoreConfig
                         streamSettings.httpupgradeSettings = httpupgradeSettings;
 
                         break;
-                    //splithttp
+                    //splithttp //xhttp
                     case nameof(ETransport.splithttp):
-                        SplithttpSettings4Ray splithttpSettings = new()
+                    case nameof(ETransport.xhttp):
+                        streamSettings.network = ETransport.xhttp.ToString();
+                        XhttpSettings4Ray xhttpSettings = new()
                         {
-                            maxUploadSize = 1000000,
-                            maxConcurrentUploads = 10
+                            scMaxEachPostBytes = "500000-1000000",
+                            scMaxConcurrentPosts = "50-100",
+                            scMinPostsIntervalMs = "30-50"
                         };
 
                         if (Utils.IsNotEmpty(node.Path))
                         {
-                            splithttpSettings.path = node.Path;
+                            xhttpSettings.path = node.Path;
                         }
                         if (Utils.IsNotEmpty(host))
                         {
-                            splithttpSettings.host = host;
+                            xhttpSettings.host = host;
                         }
-                        streamSettings.splithttpSettings = splithttpSettings;
+                        if (Utils.IsNotEmpty(node.HeaderType) && Global.XhttpMode.Contains(node.HeaderType))
+                        {
+                            xhttpSettings.mode = node.HeaderType;
+                        }
+                        if (Utils.IsNotEmpty(node.Extra))
+                        {
+                            xhttpSettings.extra = JsonUtils.ParseJson(node.Extra);
+                        }
+
+                        streamSettings.xhttpSettings = xhttpSettings;
 
                         break;
                     //h2
@@ -1006,18 +1024,17 @@ namespace ServiceLib.Services.CoreConfig
                             //request Host
                             string request = Utils.GetEmbedText(Global.V2raySampleHttpRequestFileName);
                             string[] arrHost = host.Split(',');
-                            string host2 = string.Join("\",\"", arrHost);
-                            request = request.Replace("$requestHost$", $"\"{host2}\"");
-                            //request = request.Replace("$requestHost$", string.Format("\"{0}\"", config.requestHost()));
-                            request = request.Replace("$requestUserAgent$", $"\"{useragent}\"");
+                            string host2 = string.Join(",".AppendQuotes(), arrHost);
+                            request = request.Replace("$requestHost$", $"{host2.AppendQuotes()}");
+                            request = request.Replace("$requestUserAgent$", $"{useragent.AppendQuotes()}");
                             //Path
                             string pathHttp = @"/";
                             if (Utils.IsNotEmpty(node.Path))
                             {
                                 string[] arrPath = node.Path.Split(',');
-                                pathHttp = string.Join("\",\"", arrPath);
+                                pathHttp = string.Join(",".AppendQuotes(), arrPath);
                             }
-                            request = request.Replace("$requestPath$", $"\"{pathHttp}\"");
+                            request = request.Replace("$requestPath$", $"{pathHttp.AppendQuotes()}");
                             tcpSettings.header.request = JsonUtils.Deserialize<object>(request);
 
                             streamSettings.tcpSettings = tcpSettings;
@@ -1120,17 +1137,14 @@ namespace ServiceLib.Services.CoreConfig
             if (_config.GuiItem.EnableStatistics)
             {
                 string tag = EInboundProtocol.api.ToString();
-                API4Ray apiObj = new();
+                Metrics4Ray apiObj = new();
                 Policy4Ray policyObj = new();
                 SystemPolicy4Ray policySystemSetting = new();
-
-                string[] services = { "StatsService" };
 
                 v2rayConfig.stats = new Stats4Ray();
 
                 apiObj.tag = tag;
-                apiObj.services = services.ToList();
-                v2rayConfig.api = apiObj;
+                v2rayConfig.metrics = apiObj;
 
                 policySystemSetting.statsOutboundDownlink = true;
                 policySystemSetting.statsOutboundUplink = true;

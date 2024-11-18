@@ -240,6 +240,7 @@ namespace ServiceLib.Handler
                 item.PublicKey = profileItem.PublicKey;
                 item.ShortId = profileItem.ShortId;
                 item.SpiderX = profileItem.SpiderX;
+                item.Extra = profileItem.Extra;
             }
 
             var ret = item.ConfigType switch
@@ -958,7 +959,6 @@ namespace ServiceLib.Handler
                 && o.Address == n.Address
                 && o.Port == n.Port
                 && o.Id == n.Id
-                && o.AlterId == n.AlterId
                 && o.Security == n.Security
                 && o.Network == n.Network
                 && o.HeaderType == n.HeaderType
@@ -967,6 +967,10 @@ namespace ServiceLib.Handler
                 && (o.ConfigType == EConfigType.Trojan || o.StreamSecurity == n.StreamSecurity)
                 && o.Flow == n.Flow
                 && o.Sni == n.Sni
+                && o.Alpn == n.Alpn
+                && o.Fingerprint == n.Fingerprint
+                && o.PublicKey == n.PublicKey
+                && o.ShortId == n.ShortId
                 && (!remarks || o.Remarks == n.Remarks);
         }
 
