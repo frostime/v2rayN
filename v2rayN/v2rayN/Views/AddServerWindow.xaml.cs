@@ -203,7 +203,7 @@ namespace v2rayN.Views
                 this.Bind(ViewModel, vm => vm.SelectedSource.RequestHost, v => v.txtRequestHost.Text).DisposeWith(disposables);
                 this.Bind(ViewModel, vm => vm.SelectedSource.Path, v => v.txtPath.Text).DisposeWith(disposables);
                 this.Bind(ViewModel, vm => vm.SelectedSource.Extra, v => v.txtExtra.Text).DisposeWith(disposables);
-                
+
                 this.Bind(ViewModel, vm => vm.SelectedSource.StreamSecurity, v => v.cmbStreamSecurity.Text).DisposeWith(disposables);
                 this.Bind(ViewModel, vm => vm.SelectedSource.Sni, v => v.txtSNI.Text).DisposeWith(disposables);
                 this.Bind(ViewModel, vm => vm.SelectedSource.AllowInsecure, v => v.cmbAllowInsecure.Text).DisposeWith(disposables);
@@ -220,7 +220,7 @@ namespace v2rayN.Views
             });
 
             this.Title = $"{profileItem.ConfigType}";
-            WindowsUtils.SetDarkBorder(this, AppHandler.Instance.Config.UiItem.FollowSystemTheme ? !WindowsUtils.IsLightTheme() : AppHandler.Instance.Config.UiItem.ColorModeDark);
+            WindowsUtils.SetDarkBorder(this, AppHandler.Instance.Config.UiItem.FollowSystemTheme ? WindowsUtils.IsDarkTheme() : AppHandler.Instance.Config.UiItem.ColorModeDark);
         }
 
         private async Task<bool> UpdateViewHandler(EViewAction action, object? obj)
@@ -295,7 +295,7 @@ namespace v2rayN.Views
                     cmbHeaderType.Items.Add(it);
                 });
             }
-            else if (network is nameof(ETransport.splithttp) or nameof(ETransport.xhttp))
+            else if (network is nameof(ETransport.xhttp))
             {
                 Global.XhttpMode.ForEach(it =>
                 {
@@ -345,7 +345,6 @@ namespace v2rayN.Views
                     tipPath.Text = ResUI.TransportPathTip1;
                     break;
 
-                case nameof(ETransport.splithttp):
                 case nameof(ETransport.xhttp):
                     tipRequestHost.Text = ResUI.TransportRequestHostTip2;
                     tipPath.Text = ResUI.TransportPathTip1;

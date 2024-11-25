@@ -302,7 +302,7 @@
     <value>扫描导入分享链接成功</value>
   </data>
   <data name="TestMeOutput" xml:space="preserve">
-    <value>当前服务的真连接延迟: {0} ms</value>
+    <value>当前延迟: {0} ms，{1}</value>
   </data>
   <data name="OperationSuccess" xml:space="preserve">
     <value>操作成功</value>
@@ -849,12 +849,6 @@
   </data>
   <data name="menuRoutingAdvancedSetDefault" xml:space="preserve">
     <value>设为活动规则 (Enter)</value>
-  </data>
-  <data name="menuRoutingBasic" xml:space="preserve">
-    <value>基础功能</value>
-  </data>
-  <data name="menuRoutingBasicImportRules" xml:space="preserve">
-    <value>一键导入基础规则</value>
   </data>
   <data name="TbdomainMatcher" xml:space="preserve">
     <value>域名匹配算法</value>

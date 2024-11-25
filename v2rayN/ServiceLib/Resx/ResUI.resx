@@ -302,7 +302,7 @@
     <value>Scan import the shared link successfully</value>
   </data>
   <data name="TestMeOutput" xml:space="preserve">
-    <value>The ping of current service: {0} ms</value>
+    <value>The delay : {0} ms, {1}</value>
   </data>
   <data name="OperationSuccess" xml:space="preserve">
     <value>Operation success</value>
@@ -849,12 +849,6 @@
   </data>
   <data name="menuRoutingAdvancedSetDefault" xml:space="preserve">
     <value>Set as active rule(Enter)</value>
-  </data>
-  <data name="menuRoutingBasic" xml:space="preserve">
-    <value>Basic Function</value>
-  </data>
-  <data name="menuRoutingBasicImportRules" xml:space="preserve">
-    <value>Import Basic Rules</value>
   </data>
   <data name="TbdomainMatcher" xml:space="preserve">
     <value>Domain Matcher</value>
