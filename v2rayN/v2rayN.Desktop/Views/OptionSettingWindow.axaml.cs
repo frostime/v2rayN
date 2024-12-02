@@ -23,7 +23,7 @@ namespace v2rayN.Desktop.Views
             {
                 clbdestOverride.Items.Add(it);
             });
-            _config.Inbound[0].DestOverride?.ForEach(it =>
+            _config.Inbound.First().DestOverride?.ForEach(it =>
             {
                 clbdestOverride.SelectedItems.Add(it);
             });
@@ -172,6 +172,7 @@ namespace v2rayN.Desktop.Views
 
             if (Utils.IsOSX())
             {
+                tbAutoRun.IsVisible = false;
                 togAutoRun.IsVisible = false;
                 //TODO
             }

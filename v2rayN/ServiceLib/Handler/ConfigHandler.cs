@@ -62,7 +62,7 @@ namespace ServiceLib.Handler
             {
                 if (config.Inbound.Count > 0)
                 {
-                    config.Inbound[0].Protocol = EInboundProtocol.socks.ToString();
+                    config.Inbound.First().Protocol = EInboundProtocol.socks.ToString();
                 }
             }
 
@@ -70,7 +70,7 @@ namespace ServiceLib.Handler
 
             if (Utils.IsNullOrEmpty(config.RoutingBasicItem.DomainStrategy))
             {
-                config.RoutingBasicItem.DomainStrategy = Global.DomainStrategies[0];//"IPIfNonMatch";
+                config.RoutingBasicItem.DomainStrategy = Global.DomainStrategies.First();//"IPIfNonMatch";
             }
 
             config.KcpItem ??= new KcpItem
@@ -111,7 +111,7 @@ namespace ServiceLib.Handler
             {
                 if (Thread.CurrentThread.CurrentCulture.Name.Equals("zh-cn", StringComparison.CurrentCultureIgnoreCase))
                 {
-                    config.UiItem.CurrentLanguage = Global.Languages[0];
+                    config.UiItem.CurrentLanguage = Global.Languages.First();
                 }
                 else
                 {
@@ -132,7 +132,7 @@ namespace ServiceLib.Handler
             }
             if (Utils.IsNullOrEmpty(config.SpeedTestItem.SpeedTestUrl))
             {
-                config.SpeedTestItem.SpeedTestUrl = Global.SpeedTestUrls[0];
+                config.SpeedTestItem.SpeedTestUrl = Global.SpeedTestUrls.First();
             }
             if (Utils.IsNullOrEmpty(config.SpeedTestItem.SpeedPingTestUrl))
             {
@@ -148,7 +148,7 @@ namespace ServiceLib.Handler
 
             config.Mux4SboxItem ??= new()
             {
-                Protocol = Global.SingboxMuxs[0],
+                Protocol = Global.SingboxMuxs.First(),
                 MaxConnections = 8
             };
 
@@ -429,7 +429,7 @@ namespace ServiceLib.Handler
                         {
                             return 0;
                         }
-                        sort = ProfileExHandler.Instance.GetSort(lstProfile[0].IndexId) - 1;
+                        sort = ProfileExHandler.Instance.GetSort(lstProfile.First().IndexId) - 1;
 
                         break;
                     }
@@ -1024,6 +1024,36 @@ namespace ServiceLib.Handler
 
             result.Data = indexId;
             return result;
+        }
+
+        public static async Task<ProfileItem?> GetPreSocksItem(Config config, ProfileItem node, ECoreType coreType)
+        {
+            ProfileItem? itemSocks = null;
+            var preCoreType = ECoreType.sing_box;
+            if (node.ConfigType != EConfigType.Custom && coreType != ECoreType.sing_box && config.TunModeItem.EnableTun)
+            {
+                itemSocks = new ProfileItem()
+                {
+                    CoreType = preCoreType,
+                    ConfigType = EConfigType.SOCKS,
+                    Address = Global.Loopback,
+                    Sni = node.Address, //Tun2SocksAddress
+                    Port = AppHandler.Instance.GetLocalPort(EInboundProtocol.socks)
+                };
+            }
+            else if ((node.ConfigType == EConfigType.Custom && node.PreSocksPort > 0))
+            {
+                preCoreType = config.TunModeItem.EnableTun ? ECoreType.sing_box : ECoreType.Xray;
+                itemSocks = new ProfileItem()
+                {
+                    CoreType = preCoreType,
+                    ConfigType = EConfigType.SOCKS,
+                    Address = Global.Loopback,
+                    Port = node.PreSocksPort.Value,
+                };
+            }
+
+            return itemSocks;
         }
 
         #endregion Server
